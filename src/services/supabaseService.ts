@@ -448,7 +448,7 @@ export class SupabaseService {
       
       const { data: profile, error: profileError } = await client
         .from('user_profiles')
-        .select('id')
+        .select('user_id')
         .eq('user_id', userId)
         .single();
 

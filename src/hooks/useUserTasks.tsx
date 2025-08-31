@@ -157,19 +157,7 @@ export const useUserTasks = () => {
       const newTask = await SupabaseService.addCustomTask(user.id, customTask);
       
       if (newTask) {
-        const formattedTask: UserTask = {
-          id: newTask.id,
-          userId: newTask.user_id,
-          templateId: 'custom',
-          status: 'due',
-          nextDueAt: new Date(),
-          points: newTask.points,
-          isCustom: true,
-          customTitle: newTask.custom_title
-        };
-        
-        setTasks(prev => [...prev, formattedTask]);
-
+        // No need to update local state, real-time will handle it
         toast({
           title: "Tâche ajoutée ! ✨",
           description: `"${customTask.title}" a été ajoutée à tes missions`,
@@ -211,13 +199,13 @@ export const useUserTasks = () => {
     try {
       const newUserTask = await SupabaseService.addTemplateToToday(user.id, templateId);
       
-      // Rafraîchir toutes les données pour s'assurer de la synchronisation
-      await loadUserTasks();
-      
-      toast({
-        title: "Tâche ajoutée !",
-        description: "La tâche a été ajoutée à ta journée d'aujourd'hui",
-      });
+      if (newUserTask) {
+        // No need to refresh manually, real-time will handle it
+        toast({
+          title: "Tâche ajoutée !",
+          description: "La tâche a été ajoutée à ta journée d'aujourd'hui",
+        });
+      }
     } catch (error) {
       console.error('Error adding template to today:', error);
       toast({
@@ -234,9 +222,7 @@ export const useUserTasks = () => {
     try {
       await SupabaseService.deleteTask(taskId);
       
-      // Rafraîchir toutes les données pour s'assurer de la synchronisation
-      await loadUserTasks();
-      
+      // No need to refresh manually, real-time will handle it
       toast({
         title: "Tâche retirée",
         description: "La tâche a été retirée de ta journée",
@@ -254,6 +240,29 @@ export const useUserTasks = () => {
   useEffect(() => {
     if (user) {
       loadUserTasks();
+      
+      // Set up real-time subscription for task changes
+      const channel = supabase
+        .channel('user-tasks-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_tasks',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Real-time task change:', payload);
+            // Refresh tasks when changes occur
+            loadUserTasks();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } else {
       setTasks([]);
       setLoading(false);
