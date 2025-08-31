@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,15 +16,38 @@ export default function Profile() {
   const [stats, setStats] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  useEffect(() => {
-    loadUserProfile();
+  const loadUserProfile = useCallback(async () => {
+    if (!user) return;
     
-    // Set up real-time subscription for profile changes
-    if (user) {  
+    try {
+      setIsLoading(true);
+      const userData = await SupabaseService.getUserData(user.id);
+      if (userData.profile?.avatar_url) {
+        setAvatarUrl(userData.profile.avatar_url);
+      }
+      
+      // Charger aussi les statistiques utilisateur
+      const userStats = await SupabaseService.getUserStats(user.id);
+      setStats(userStats);
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      // En cas d'erreur, utiliser les données fictives
+      setStats(mockUserStats);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadUserProfile();
+      
+      // Set up real-time subscription for profile changes
       const profileChannel = supabase
         .channel('user-profile-changes-profile')
         .on(
@@ -38,21 +61,7 @@ export default function Profile() {
           (payload) => {
             console.log('Profile updated:', payload);
             // Reload profile data when changes are detected
-            loadUserProfile();
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'user_tasks',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('Tasks updated:', payload);
-            // Reload stats when tasks change
-            loadUserProfile();
+            setTimeout(() => loadUserProfile(), 100);
           }
         )
         .subscribe();
@@ -61,26 +70,7 @@ export default function Profile() {
         supabase.removeChannel(profileChannel);
       };
     }
-  }, [user]);
-
-  const loadUserProfile = async () => {
-    if (!user) return;
-    
-    try {
-      const userData = await SupabaseService.getUserData(user.id);
-      if (userData.profile?.avatar_url) {
-        setAvatarUrl(userData.profile.avatar_url);
-      }
-      
-      // Charger aussi les statistiques utilisateur
-      const userStats = await SupabaseService.getUserStats(user.id);
-      setStats(userStats);
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-      // En cas d'erreur, utiliser les données fictives
-      setStats(mockUserStats);
-    }
-  };
+  }, [user, loadUserProfile]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -165,6 +155,19 @@ export default function Profile() {
 
   // Utiliser les données fictives si les vraies stats ne sont pas encore chargées
   const displayStats = stats || mockUserStats;
+  
+  if (isLoading && !stats) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 animate-bounce"></div>
+            <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight">Chargement...</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   const currentThreshold = levelThresholds[displayStats.currentLevel];
   
