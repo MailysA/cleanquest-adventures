@@ -73,12 +73,17 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
       <div className="max-w-lg w-full">
-        <div className="text-center mb-6 sm:mb-8 animate-fade-in">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-3 gradient-hero bg-clip-text text-transparent leading-tight">
-            Bienvenue dans ton aventure CleanQuest ✨
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
+          <div className="mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
+              <span className="text-2xl">✨</span>
+            </div>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4 gradient-hero bg-clip-text text-transparent leading-tight">
+            CleanQuest
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base px-2">
-            Dis-nous qui tu es pour adapter tes missions de nettoyage.
+          <p className="text-muted-foreground text-base sm:text-lg max-w-md mx-auto leading-relaxed">
+            Personnalise ton expérience de nettoyage en quelques questions
           </p>
         </div>
 
