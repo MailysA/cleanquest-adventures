@@ -49,6 +49,14 @@ const questions = [
   }
 ];
 
+const defaultProfile: Partial<UserProfile> = {
+  housingType: 'apartment',
+  familyStatus: 'single',
+  hasPets: false,
+  hasGarden: false,
+  currentLevel: 'regulier'
+};
+
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [profile, setProfile] = useState<Partial<UserProfile>>({});
@@ -70,6 +78,12 @@ export default function Onboarding() {
     }
   };
 
+  const handleSkip = () => {
+    // Save default profile and redirect
+    localStorage.setItem('userProfile', JSON.stringify(defaultProfile));
+    navigate('/home');
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
       <div className="max-w-lg w-full">
@@ -85,6 +99,13 @@ export default function Onboarding() {
           <p className="text-muted-foreground text-base sm:text-lg max-w-md mx-auto leading-relaxed">
             Personnalise ton expérience de nettoyage en quelques questions
           </p>
+          <Button
+            variant="ghost"
+            onClick={handleSkip}
+            className="mt-4 text-muted-foreground hover:text-primary text-sm"
+          >
+            Passer les questions →
+          </Button>
         </div>
 
         <Card className="p-4 sm:p-6 gradient-card animate-slide-up">
