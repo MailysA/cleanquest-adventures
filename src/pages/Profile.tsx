@@ -165,7 +165,23 @@ export default function Profile() {
 
   // Utiliser les données fictives si les vraies stats ne sont pas encore chargées
   const displayStats = stats || mockUserStats;
+  
   const currentThreshold = levelThresholds[displayStats.currentLevel];
+  
+  // Fallback si le niveau n'existe pas
+  if (!currentThreshold) {
+    console.warn(`Level "${displayStats.currentLevel}" not found in levelThresholds`);
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight">Chargement...</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   const progressToNext = currentThreshold.next 
     ? ((displayStats.xp - currentThreshold.min) / (currentThreshold.max - currentThreshold.min)) * 100
     : 100;

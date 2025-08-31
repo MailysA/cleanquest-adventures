@@ -32,6 +32,20 @@ const levelConfig = {
 export const LevelBadge = ({ level, className }: LevelBadgeProps) => {
   const config = levelConfig[level];
   
+  // Fallback si le niveau n'existe pas
+  if (!config) {
+    console.warn(`Level "${level}" not found in levelConfig`);
+    return (
+      <Badge className={cn(
+        "text-sm font-medium px-3 py-1 transition-smooth bg-muted text-muted-foreground",
+        className
+      )}>
+        <span className="mr-1">🌱</span>
+        Apprenti
+      </Badge>
+    );
+  }
+  
   return (
     <Badge className={cn(
       "text-sm font-medium px-3 py-1 transition-smooth",
