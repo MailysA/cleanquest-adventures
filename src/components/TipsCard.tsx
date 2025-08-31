@@ -55,7 +55,7 @@ export const TipsCard = () => {
   const currentTip = tips[currentTipIndex];
 
   return (
-    <Card className="p-4 sm:p-6 bg-gradient-to-r from-accent/10 to-primary/10 border-accent/30 animate-fade-in">
+    <Card className="p-4 sm:p-6 bg-gradient-to-r from-accent/10 to-primary/10 border-accent/30 animate-fade-in h-full">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <Lightbulb className="w-5 h-5 text-accent" />
@@ -76,12 +76,12 @@ export const TipsCard = () => {
         )}
       </div>
       
-      <div className="space-y-3">
-        <h4 className="font-semibold text-primary">{currentTip.title}</h4>
-        <p className="text-sm text-muted-foreground leading-relaxed">
+      <div className="space-y-3 flex-1">
+        <h4 className="font-semibold text-primary line-clamp-2">{currentTip.title}</h4>
+        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
           {currentTip.content}
         </p>
-        <div className="flex items-center space-x-2 pt-2">
+        <div className="flex items-center space-x-2 pt-2 mt-auto">
           <User className="w-3 h-3 text-muted-foreground" />
           <span className="text-xs font-medium text-accent">{currentTip.author}</span>
           <Badge variant="outline" className="text-xs">
@@ -89,6 +89,20 @@ export const TipsCard = () => {
           </Badge>
         </div>
       </div>
+      
+      {/* Indicateurs de navigation */}
+      {tips.length > 1 && (
+        <div className="flex justify-center space-x-1 mt-4">
+          {tips.map((_, index) => (
+            <div
+              key={index}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                index === currentTipIndex ? 'bg-accent' : 'bg-accent/30'
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </Card>
   );
 };

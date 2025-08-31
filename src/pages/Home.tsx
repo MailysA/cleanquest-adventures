@@ -185,9 +185,9 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header with avatar and level */}
-      <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
+    <div className="min-h-screen bg-background overflow-y-auto safe-area-top">
+      {/* Header with avatar and level - Fixed at top */}
+      <div className="gradient-hero text-primary-foreground p-4 sm:p-6 sticky top-0 z-10 safe-area-top">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3 sm:space-x-4">
@@ -229,7 +229,8 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 -mt-4 sm:-mt-6">
+      {/* Scrollable content */}
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 pb-20 safe-area-bottom">
         {/* Mission du jour */}
         {mainTask && (mainTemplate || mainTask.isCustom) && (
           <Card className="p-4 sm:p-6 mb-6 gradient-card border-2 border-primary/20 shadow-primary animate-slide-up">
@@ -383,8 +384,62 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Encarts informatifs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Astuces et conseils - Scroll horizontal */}
+        <div className="mb-6">
+          <div className="flex items-center mb-4">
+            <h2 className="text-xl font-bold flex items-center space-x-2">
+              <Star className="w-5 h-5 text-accent" />
+              <span>Astuces du jour</span>
+            </h2>
+          </div>
+          
+          {/* Version mobile - Stack vertical */}
+          <div className="md:hidden space-y-4">
+            <TipsCard />
+            <InfoCard />
+            <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <div className="flex items-center space-x-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="font-semibold text-green-800">Conseil du jour</h3>
+              </div>
+              <p className="text-green-700 text-sm leading-relaxed">
+                Commence par les tâches les plus importantes le matin. 
+                Tu auras plus d'énergie et tu te sentiras accompli pour le reste de la journée !
+              </p>
+            </Card>
+          </div>
+          
+          {/* Version desktop - Scroll horizontal */}
+          <div className="hidden md:block overflow-x-auto pb-4 -mx-4 px-4 scroll-snap-x">
+            <div className="flex space-x-4 min-w-max">
+              <div className="w-80 flex-shrink-0 scroll-snap-start">
+                <TipsCard />
+              </div>
+              <div className="w-80 flex-shrink-0 scroll-snap-start">
+                <InfoCard />
+              </div>
+              <div className="w-80 flex-shrink-0 scroll-snap-start">
+                <Card className="p-4 h-full bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="font-semibold text-green-800">Conseil du jour</h3>
+                  </div>
+                  <p className="text-green-700 text-sm leading-relaxed line-clamp-4">
+                    Commence par les tâches les plus importantes le matin. 
+                    Tu auras plus d'énergie et tu te sentiras accompli pour le reste de la journée !
+                  </p>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Encarts informatifs - Version desktop */}
+        <div className="hidden md:grid md:grid-cols-2 gap-4 mb-6">
           <InfoCard />
           <TipsCard />
         </div>

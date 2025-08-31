@@ -27,7 +27,7 @@ export interface UserProfile {
   familyStatus: 'single' | 'parent';
   hasPets: boolean;
   hasGarden: boolean;
-  currentLevel: 'apprenti' | 'regulier' | 'maitre' | 'sensei';
+  currentLevel: string;
 }
 
 export interface Badge {
@@ -43,7 +43,7 @@ export interface UserStats {
   totalPoints: number;
   weeklyPoints: number;
   weeklyCompletion: number;
-  currentLevel: 'apprenti' | 'regulier' | 'maitre' | 'sensei';
+  currentLevel: string;
   xp: number;
   xpToNextLevel: number;
   badges: Badge[];

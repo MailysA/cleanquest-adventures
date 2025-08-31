@@ -159,10 +159,17 @@ export default function Profile() {
   };
 
   const levelThresholds = {
-    apprenti: { min: 0, max: 100, next: 'regulier' },
-    regulier: { min: 100, max: 300, next: 'maitre' },
-    maitre: { min: 300, max: 600, next: 'sensei' },
-    sensei: { min: 600, max: 1000, next: null }
+    Apprenti: { min: 0, max: 100, next: 'Novice' },
+    Novice: { min: 100, max: 300, next: 'Adepte' },
+    Adepte: { min: 300, max: 600, next: 'Expert' },
+    Expert: { min: 600, max: 1000, next: 'Maître' },
+    Maître: { min: 1000, max: 1500, next: 'Légende' },
+    Légende: { min: 1500, max: 1500, next: null },
+    // Fallback for old level names
+    apprenti: { min: 0, max: 100, next: 'Novice' },
+    regulier: { min: 100, max: 300, next: 'Adepte' },
+    maitre: { min: 300, max: 600, next: 'Expert' },
+    sensei: { min: 600, max: 1000, next: 'Maître' }
   };
 
   // Utiliser les données fictives si les vraies stats ne sont pas encore chargées
