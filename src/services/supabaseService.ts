@@ -603,4 +603,25 @@ export class SupabaseService {
     }
     return 0; // Max level atteint
   }
+
+  // Récupérer les astuces depuis la base
+  static async getTips(limit: number = 3) {
+    try {
+      const client = checkSupabaseConnection();
+      
+      const { data, error } = await client
+        .from('tips')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .limit(limit);
+
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('❌ Error fetching tips:', error);
+      throw error;
+    }
+  }
 }

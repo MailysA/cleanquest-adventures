@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { TaskCard } from "@/components/TaskCard";
 import { StatsCard } from "@/components/StatsCard";
 import { LevelBadge } from "@/components/LevelBadge";
+import { TipsCard } from "@/components/TipsCard";
+import { InfoCard } from "@/components/InfoCard";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -276,6 +278,12 @@ export default function Home() {
             trend="up"
             subtitle="pts gagnés"
           />
+        </div>
+
+        {/* Encarts informatifs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <InfoCard />
+          <TipsCard />
         </div>
 
         {/* Badge débloqué */}
