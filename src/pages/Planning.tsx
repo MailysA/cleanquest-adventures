@@ -68,6 +68,28 @@ export default function Planning() {
       .filter(template => !tasks.some(task => task.templateId === template.id))
       .map(template => ({ task: template, userTask: null }))
   ];
+  
+  // Fonction pour changer la fréquence et ajuster automatiquement la pièce
+  const handleFrequencyChange = (frequency: string) => {
+    setSelectedFrequency(frequency);
+    
+    if (frequency !== 'all') {
+      // Récupérer les pièces disponibles pour cette fréquence
+      const tasksForFrequency = allTasks.filter(item => item.task.frequency === frequency);
+      const roomsForFrequency = [...new Set(tasksForFrequency.map(item => item.task.room))];
+      
+      // Si une seule pièce, la sélectionner automatiquement
+      if (roomsForFrequency.length === 1) {
+        setSelectedRoom(roomsForFrequency[0]);
+      } else if (roomsForFrequency.length > 1) {
+        // Si plusieurs pièces, garder "Toutes" pour voir toutes les tâches
+        setSelectedRoom('Toutes');
+      }
+    } else {
+      // Pour "all", remettre sur "Toutes"
+      setSelectedRoom('Toutes');
+    }
+  };
 
   // Filter tasks based on selections
   const filteredItems = allTasks.filter(item => {
@@ -142,7 +164,7 @@ export default function Planning() {
                   key={freq.value}
                   variant={selectedFrequency === freq.value ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setSelectedFrequency(freq.value)}
+                  onClick={() => handleFrequencyChange(freq.value)}
                   className={selectedFrequency === freq.value ? "gradient-primary" : ""}
                 >
                   {freq.label}
