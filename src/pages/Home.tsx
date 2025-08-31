@@ -155,8 +155,8 @@ export default function Home() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs sm:text-sm opacity-90">Points cette semaine</div>
-              <div className="text-xl sm:text-2xl font-bold">{stats.weeklyPoints}</div>
+              <div className="text-xs sm:text-sm opacity-90">Complétude hebdo</div>
+              <div className="text-xl sm:text-2xl font-bold">{stats.weeklyCompletion}%</div>
             </div>
           </div>
 
@@ -248,11 +248,11 @@ export default function Home() {
             subtitle="pts disponibles"
           />
           <StatsCard
-            title="Complétude hebdo"
-            value={`${stats.weeklyCompletion}%`}
-            icon={<BarChart className="w-5 h-5" />}
-            trend={stats.weeklyCompletion >= 70 ? 'up' : 'neutral'}
-            subtitle={stats.weeklyCompletion >= 70 ? 'Excellent !' : 'En progrès'}
+            title="Points cette semaine"
+            value={`${stats.weeklyPoints}`}
+            icon={<Trophy className="w-5 h-5" />}
+            trend="up"
+            subtitle="pts gagnés"
           />
         </div>
 
