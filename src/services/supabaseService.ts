@@ -1,4 +1,4 @@
-import { supabase, TaskTemplateRow, UserTaskRow, UserProfileRow, BadgeRow } from '@/lib/supabase';
+import { supabase, TaskTemplateRow, UserTaskRow, UserProfileRow, BadgeRow, checkSupabaseConnection } from '@/lib/supabase';
 import { taskTemplates, mockUserProfile, mockUserTasks, mockBadges, mockUserStats } from '@/data/mockData';
 
 // Service pour injecter les données mockées en base
@@ -7,6 +7,7 @@ export class SupabaseService {
   // Injecter les templates de tâches
   static async insertTaskTemplates() {
     try {
+      const client = checkSupabaseConnection();
       const templatesForDB: TaskTemplateRow[] = taskTemplates.map(template => ({
         id: template.id,
         room: template.room,
@@ -17,7 +18,7 @@ export class SupabaseService {
         condition: template.condition
       }));
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('task_templates')
         .upsert(templatesForDB, { onConflict: 'id' });
 
@@ -33,6 +34,7 @@ export class SupabaseService {
   // Créer un profil utilisateur
   static async createUserProfile(userId: string) {
     try {
+      const client = checkSupabaseConnection();
       const profileForDB: Omit<UserProfileRow, 'created_at' | 'updated_at'> = {
         id: `profile_${userId}`,
         user_id: userId,
@@ -48,7 +50,7 @@ export class SupabaseService {
         xp_to_next_level: mockUserStats.xpToNextLevel
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('user_profiles')
         .upsert([profileForDB], { onConflict: 'user_id' });
 
@@ -64,6 +66,7 @@ export class SupabaseService {
   // Injecter les tâches utilisateur
   static async insertUserTasks(userId: string) {
     try {
+      const client = checkSupabaseConnection();
       const userTasksForDB: Omit<UserTaskRow, 'created_at'>[] = mockUserTasks.map((task, index) => ({
         id: `${userId}_task_${index}`,
         user_id: userId,
@@ -78,7 +81,7 @@ export class SupabaseService {
         custom_duration: undefined
       }));
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('user_tasks')
         .upsert(userTasksForDB, { onConflict: 'id' });
 
@@ -94,6 +97,7 @@ export class SupabaseService {
   // Injecter les badges utilisateur
   static async insertUserBadges(userId: string) {
     try {
+      const client = checkSupabaseConnection();
       const badgesForDB: Omit<BadgeRow, 'created_at'>[] = mockBadges.map((badge, index) => ({
         id: `${userId}_badge_${index}`,
         user_id: userId,
@@ -106,7 +110,7 @@ export class SupabaseService {
         unlocked_at: badge.unlocked ? new Date().toISOString() : undefined
       }));
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('user_badges')
         .upsert(badgesForDB, { onConflict: 'id' });
 
@@ -147,14 +151,15 @@ export class SupabaseService {
   // Récupérer les données utilisateur
   static async getUserData(userId: string) {
     try {
+      const client = checkSupabaseConnection();
       const [profileResult, tasksResult, badgesResult] = await Promise.all([
-        supabase
+        client
           .from('user_profiles')
           .select('*')
           .eq('user_id', userId)
           .single(),
         
-        supabase
+        client
           .from('user_tasks')
           .select(`
             *,
@@ -162,7 +167,7 @@ export class SupabaseService {
           `)
           .eq('user_id', userId),
         
-        supabase
+        client
           .from('user_badges')
           .select('*')
           .eq('user_id', userId)
@@ -187,13 +192,14 @@ export class SupabaseService {
   // Mettre à jour le statut d'une tâche
   static async updateTaskStatus(taskId: string, status: 'pending' | 'done' | 'snoozed') {
     try {
+      const client = checkSupabaseConnection();
       const updates: any = { status };
       
       if (status === 'done') {
         updates.last_done_at = new Date().toISOString();
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('user_tasks')
         .update(updates)
         .eq('id', taskId)
@@ -211,8 +217,9 @@ export class SupabaseService {
   // Mettre à jour les points utilisateur
   static async updateUserPoints(userId: string, pointsToAdd: number) {
     try {
+      const client = checkSupabaseConnection();
       // Récupérer le profil actuel
-      const { data: profile, error: fetchError } = await supabase
+      const { data: profile, error: fetchError } = await client
         .from('user_profiles')
         .select('total_points, weekly_points, xp')
         .eq('user_id', userId)
@@ -224,7 +231,7 @@ export class SupabaseService {
       const newWeeklyPoints = profile.weekly_points + pointsToAdd;
       const newXp = profile.xp + pointsToAdd;
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('user_profiles')
         .update({
           total_points: newTotalPoints,
@@ -247,7 +254,8 @@ export class SupabaseService {
   // Supprimer une tâche
   static async deleteTask(taskId: string) {
     try {
-      const { data, error } = await supabase
+      const client = checkSupabaseConnection();
+      const { data, error } = await client
         .from('user_tasks')
         .delete()
         .eq('id', taskId)
@@ -270,6 +278,7 @@ export class SupabaseService {
     points: number;
   }) {
     try {
+      const client = checkSupabaseConnection();
       const taskId = `${userId}_custom_${Date.now()}`;
       
       const newTask = {
@@ -285,7 +294,7 @@ export class SupabaseService {
         custom_duration: customTask.durationMin
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('user_tasks')
         .insert([newTask])
         .select()

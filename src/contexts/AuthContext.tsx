@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, checkSupabaseConnection } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isSupabaseReady: boolean;
   signUp: (email: string, password: string, userData?: any) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -30,10 +31,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
+    // Early exit if Supabase is not configured
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     const getSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const client = checkSupabaseConnection();
+        const { data: { session }, error } = await client.auth.getSession();
         if (error) throw error;
         
         setSession(session);
@@ -47,8 +55,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     getSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    // Listen for auth changes only if Supabase is configured
+    const client = checkSupabaseConnection();
+    const { data: { subscription } } = client.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
@@ -75,7 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signUp({
+      const client = checkSupabaseConnection();
+      const { data, error } = await client.auth.signUp({
         email,
         password,
         options: {
@@ -107,7 +117,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const client = checkSupabaseConnection();
+      const { data, error } = await client.auth.signInWithPassword({
         email,
         password
       });
@@ -129,7 +140,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
+      const client = checkSupabaseConnection();
+      const { error } = await client.auth.signOut();
       if (error) throw error;
     } catch (error: any) {
       console.error('Sign out error:', error);
@@ -145,7 +157,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const client = checkSupabaseConnection();
+      const { error } = await client.auth.resetPasswordForEmail(email);
       if (error) throw error;
       
       toast({
@@ -167,6 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
+    isSupabaseReady: isSupabaseConfigured,
     signUp,
     signIn,
     signOut,

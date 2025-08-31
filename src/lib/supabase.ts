@@ -1,9 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+// Check if Supabase is properly configured
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Export configuration status
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
+
+// Create client only if properly configured, otherwise create a mock
+export const supabase = isSupabaseConfigured 
+  ? createClient(supabaseUrl!, supabaseAnonKey!)
+  : null;
+
+// Helper function to check if Supabase is available
+export const checkSupabaseConnection = () => {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured. Please connect your Supabase project first.');
+  }
+  return supabase!;
+};
 
 // Types pour les tables Supabase
 export interface TaskTemplateRow {

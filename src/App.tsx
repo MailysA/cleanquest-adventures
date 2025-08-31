@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-route
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { BottomNav } from "@/components/BottomNav";
+import { SupabaseConnectionWarning } from "@/components/SupabaseConnectionWarning";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -38,8 +39,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppContent = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, isSupabaseReady } = useAuth();
   const showBottomNav = user && ['/home', '/planning', '/profile', '/settings'].includes(location.pathname);
+
+  // Show Supabase connection warning if not configured
+  if (!isSupabaseReady) {
+    return <SupabaseConnectionWarning />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
