@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { LevelBadge } from "@/components/LevelBadge";
+import { GoogleCalendarSync } from "@/components/GoogleCalendarSync";
+import { useAuth } from "@/contexts/AuthContext";
 import { mockUserProfile } from "@/data/mockData";
 import { 
   Settings as SettingsIcon, 
@@ -14,7 +16,8 @@ import {
   Home,
   Users,
   PawPrint,
-  Trees
+  Trees,
+  LogOut
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,6 +29,15 @@ export default function Settings() {
     achievements: true
   });
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   const handleProfileUpdate = (field: string, value: any) => {
     setProfile(prev => ({ ...prev, [field]: value }));
@@ -224,6 +236,9 @@ export default function Settings() {
           </div>
         </Card>
 
+        {/* Google Calendar Sync */}
+        <GoogleCalendarSync className="mb-6 animate-fade-in" />
+
         {/* Actions */}
         <Card className="p-6 mb-6 animate-fade-in">
           <div className="flex items-center space-x-2 mb-4">
@@ -239,6 +254,15 @@ export default function Settings() {
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Réinitialiser ma progression
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleSignOut}
+              className="w-full justify-start text-muted-foreground border-border hover:bg-muted/50"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Se déconnecter
             </Button>
           </div>
         </Card>
@@ -263,7 +287,8 @@ export default function Settings() {
           <div className="mt-4 pt-4 border-t border-border">
             <div className="text-center text-sm text-muted-foreground">
               <p>CleanQuest v1.0</p>
-              <p>Créé avec ❤️ pour rendre le ménage amusant</p>
+              <p>Connecté en tant que {user?.email}</p>
+              <p className="mt-2">Créé avec ❤️ pour rendre le ménage amusant</p>
             </div>
           </div>
         </Card>

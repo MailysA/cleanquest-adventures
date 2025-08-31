@@ -2,21 +2,35 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user has completed onboarding
     const userProfile = localStorage.getItem('userProfile');
-    if (userProfile) {
-      // User exists, redirect to home
+    if (user && !userProfile) {
+      // User is authenticated but hasn't completed onboarding
+      navigate('/onboarding', { replace: true });
+    } else if (user && userProfile) {
+      // User is authenticated and has completed onboarding
       navigate('/home', { replace: true });
     }
-  }, [navigate]);
+    // If no user, stay on landing page
+  }, [navigate, user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full gradient-primary animate-bounce"></div>
+      </div>
+    );
+  }
 
   const handleStartJourney = () => {
-    navigate('/onboarding');
+    navigate('/auth');
   };
 
   return (

@@ -4,17 +4,25 @@ import { SupabaseService } from '@/services/supabaseService';
 import { supabase } from '@/lib/supabase';
 import { taskTemplates } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useUserTasks = () => {
   const [tasks, setTasks] = useState<UserTask[]>([]);
   const [templates, setTemplates] = useState<TaskTemplate[]>(taskTemplates);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const loadUserTasks = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      setError(null);
+      setLoading(true);
 
       const userData = await SupabaseService.getUserData(user.id);
       if (userData.tasks) {
@@ -31,14 +39,22 @@ export const useUserTasks = () => {
         }));
         setTasks(formattedTasks);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading tasks:', error);
+      setError(error.message || 'Erreur lors du chargement des tâches');
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger tes tâches",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const completeTask = async (taskId: string) => {
+    if (!user) return;
+
     try {
       await SupabaseService.updateTaskStatus(taskId, 'done');
       
@@ -46,10 +62,7 @@ export const useUserTasks = () => {
       const template = templates.find(t => t.id === task?.templateId);
       
       if (task && template) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await SupabaseService.updateUserPoints(user.id, template.points);
-        }
+        await SupabaseService.updateUserPoints(user.id, template.points);
         
         setTasks(prev => prev.map(t => 
           t.id === taskId 
@@ -62,7 +75,7 @@ export const useUserTasks = () => {
           description: `+${template.points} points gagnés`,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error completing task:', error);
       toast({
         title: "Erreur",
@@ -86,8 +99,13 @@ export const useUserTasks = () => {
         title: "Tâche reportée ⏸️",
         description: "Tu pourras la faire plus tard !",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error snoozing task:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de reporter la tâche",
+        variant: "destructive"
+      });
     }
   };
 
@@ -101,7 +119,7 @@ export const useUserTasks = () => {
         title: "Tâche supprimée",
         description: "Cette tâche ne t'embêtera plus !",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting task:', error);
       toast({
         title: "Erreur",
@@ -117,10 +135,9 @@ export const useUserTasks = () => {
     durationMin: number;
     points: number;
   }) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    if (!user) return;
 
+    try {
       const newTask = await SupabaseService.addCustomTask(user.id, customTask);
       
       if (newTask) {
@@ -142,7 +159,7 @@ export const useUserTasks = () => {
           description: `"${customTask.title}" a été ajoutée à tes missions`,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding custom task:', error);
       toast({
         title: "Erreur",
@@ -173,13 +190,19 @@ export const useUserTasks = () => {
   };
 
   useEffect(() => {
-    loadUserTasks();
-  }, []);
+    if (user) {
+      loadUserTasks();
+    } else {
+      setTasks([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   return {
     tasks,
     templates,
     loading,
+    error,
     completeTask,
     snoozeTask,
     deleteTask,
