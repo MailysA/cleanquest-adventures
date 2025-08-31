@@ -82,6 +82,28 @@ export const TaskCard = ({
                     Exécution anticipée
                   </Badge>
                 )}
+                
+                {/* Badge de statut */}
+                {status === 'due' && (
+                  <Badge variant="outline" className="text-xs border-primary/30 text-primary bg-primary/5">
+                    À faire
+                  </Badge>
+                )}
+                {status === 'snoozed' && (
+                  <Badge variant="outline" className="text-xs border-warning/30 text-warning bg-warning/10">
+                    Reporté
+                  </Badge>
+                )}
+                {status === 'done' && (
+                  <Badge variant="outline" className="text-xs border-success/30 text-success bg-success/10">
+                    Fait
+                  </Badge>
+                )}
+                {status === 'deleted' && (
+                  <Badge variant="outline" className="text-xs border-muted text-muted-foreground bg-muted/20">
+                    Supprimé
+                  </Badge>
+                )}
                 {!isCustom && (
                   <>
                     {task.frequency === 'daily' && <span className="text-xs text-accent">Quotidien</span>}
