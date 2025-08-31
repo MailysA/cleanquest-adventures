@@ -154,13 +154,27 @@ export class SupabaseService {
       const client = checkSupabaseConnection();
       
       // D'abord récupérer le profil utilisateur pour connaître ses paramètres
-      const { data: profile, error: profileError } = await client
+      let { data: profile, error: profileError } = await client
         .from('user_profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (profileError && profileError.code !== 'PGRST116') {
+      // Si le profil n'existe pas, le créer automatiquement
+      if (profileError && profileError.code === 'PGRST116') {
+        console.log('Profile not found, creating new profile for user:', userId);
+        await this.createUserProfile(userId);
+        
+        // Récupérer le profil nouvellement créé
+        const { data: newProfile, error: newProfileError } = await client
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+          
+        if (newProfileError) throw newProfileError;
+        profile = newProfile;
+      } else if (profileError) {
         throw profileError;
       }
 
@@ -345,6 +359,9 @@ export class SupabaseService {
     try {
       const client = checkSupabaseConnection();
       
+      // S'assurer que le profil utilisateur existe
+      await this.ensureUserProfileExists(userId);
+      
       // D'abord récupérer le template
       const { data: template, error: templateError } = await client
         .from('task_templates')
@@ -409,6 +426,30 @@ export class SupabaseService {
       return data;
     } catch (error) {
       console.error('❌ Error updating user profile:', error);
+      throw error;
+    }
+  }
+
+  // S'assurer qu'un profil utilisateur existe
+  static async ensureUserProfileExists(userId: string) {
+    try {
+      const client = checkSupabaseConnection();
+      
+      const { data: profile, error: profileError } = await client
+        .from('user_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      // Si le profil n'existe pas, le créer
+      if (profileError && profileError.code === 'PGRST116') {
+        console.log('Creating missing profile for user:', userId);
+        await this.createUserProfile(userId);
+      } else if (profileError) {
+        throw profileError;
+      }
+    } catch (error) {
+      console.error('❌ Error ensuring user profile exists:', error);
       throw error;
     }
   }
