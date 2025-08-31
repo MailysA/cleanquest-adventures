@@ -252,13 +252,12 @@ export default function Home() {
 
         {/* Liste des tâches du jour */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center mb-4">
             <h2 className="text-xl font-bold flex items-center space-x-2">
               <ClipboardList className="w-5 h-5" />
               <span>Tâches d'aujourd'hui</span>
               <Badge variant="secondary">{todayTasks.length}</Badge>
             </h2>
-            <AddCustomTaskDialog onAddTask={addCustomTask} />
           </div>
           
           <div className="space-y-3">
