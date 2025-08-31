@@ -604,17 +604,30 @@ export class SupabaseService {
     return 0; // Max level atteint
   }
 
-  // Récupérer les astuces depuis la base
-  static async getTips(limit: number = 3) {
+  // Récupérer les astuces depuis la base avec rotation tous les 5 jours
+  static async getTips(limit: number = 6) {
     try {
       const client = checkSupabaseConnection();
+      
+      // Calculer le cycle actuel basé sur la date (renouvellement tous les 5 jours)
+      const startDate = new Date('2025-01-01'); // Date de référence pour commencer les cycles
+      const currentDate = new Date();
+      const daysDifference = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Chaque cycle dure 5 jours, il y a 12 cycles au total (60 jours = 2 mois)
+      const cycleNumber = Math.floor(daysDifference / 5) % 12; // 0 à 11
+      
+      // Calculer la plage d'astuces pour ce cycle (6 astuces par cycle)
+      const startOrder = (cycleNumber * 6) + 1; // +1 car display_order commence à 1
+      const endOrder = startOrder + 5; // 6 astuces par cycle
       
       const { data, error } = await client
         .from('tips')
         .select('*')
         .eq('is_active', true)
-        .order('display_order', { ascending: true })
-        .limit(limit);
+        .gte('display_order', startOrder)
+        .lte('display_order', endOrder)
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
       

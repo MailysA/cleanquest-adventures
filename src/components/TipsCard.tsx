@@ -24,7 +24,7 @@ export const TipsCard = () => {
 
   const loadTips = async () => {
     try {
-      const data = await SupabaseService.getTips(6); // Charger plus d'astuces pour la rotation
+      const data = await SupabaseService.getTips(); // Charger 6 astuces par cycle (valeur par défaut)
       setTips(data);
     } catch (error) {
       console.error('Error loading tips:', error);
