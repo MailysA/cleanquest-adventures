@@ -7,6 +7,7 @@ import { AddCustomTaskDialog } from "@/components/AddCustomTaskDialog";
 import { useUserTasks } from "@/hooks/useUserTasks";
 import { taskTemplates } from "@/data/mockData";
 import { Calendar, Filter, Clock, ClipboardList, Star, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const frequencies = [
   { value: 'all', label: 'Toutes', color: 'bg-muted' },
@@ -18,14 +19,14 @@ const frequencies = [
 ];
 
 const rooms = [
-  'Toutes',
-  'Cuisine',
-  'Salon', 
-  'Salle de bain',
-  'WC',
-  'Chambre',
-  'Jardin',
-  'Buanderie'
+  { name: 'Toutes', color: 'bg-muted text-muted-foreground' },
+  { name: 'Cuisine', color: 'bg-orange-500 text-white' },
+  { name: 'Salon', color: 'bg-blue-500 text-white' }, 
+  { name: 'Salle de bain', color: 'bg-cyan-500 text-white' },
+  { name: 'WC', color: 'bg-teal-500 text-white' },
+  { name: 'Chambre', color: 'bg-purple-500 text-white' },
+  { name: 'Jardin', color: 'bg-green-500 text-white' },
+  { name: 'Buanderie', color: 'bg-indigo-500 text-white' }
 ];
 
 export default function Planning() {
@@ -177,15 +178,20 @@ export default function Planning() {
           <div>
             <h3 className="text-sm font-medium mb-2 text-muted-foreground">Pièce</h3>
             <div className="flex flex-wrap gap-2">
-              {rooms.map((room) => (
+              {rooms.map((roomObj) => (
                 <Button
-                  key={room}
-                  variant={selectedRoom === room ? "default" : "outline"}
+                  key={roomObj.name}
+                  variant={selectedRoom === roomObj.name ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setSelectedRoom(room)}
-                  className={selectedRoom === room ? "gradient-primary" : ""}
+                  onClick={() => setSelectedRoom(roomObj.name)}
+                  className={cn(
+                    selectedRoom === roomObj.name 
+                      ? `${roomObj.color} border-0` 
+                      : "hover:opacity-80",
+                    "transition-all duration-200"
+                  )}
                 >
-                  {room}
+                  {roomObj.name}
                 </Button>
               ))}
             </div>
