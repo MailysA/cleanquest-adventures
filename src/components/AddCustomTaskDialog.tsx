@@ -33,7 +33,7 @@ export const AddCustomTaskDialog = ({ onAddTask }: AddCustomTaskDialogProps) => 
   const [title, setTitle] = useState('');
   const [room, setRoom] = useState('');
   const [duration, setDuration] = useState(15);
-  const [points, setPoints] = useState(5);
+  const [points, setPoints] = useState(2);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

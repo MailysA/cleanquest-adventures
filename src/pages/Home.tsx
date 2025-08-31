@@ -123,10 +123,7 @@ export default function Home() {
                   <User className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 )}
               </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold leading-tight">Salut, Champion !</h1>
-                <LevelBadge level={stats.currentLevel} className="mt-1" />
-              </div>
+             
             </div>
             <div className="text-right">
               <div className="text-xs sm:text-sm opacity-90">Points cette semaine</div>
@@ -206,7 +203,11 @@ export default function Home() {
             </div>
           </Card>
         )}
-
+        {/* Badge level*/}
+         <div>
+          <h1 className="text-xl sm:text-2xl font-bold leading-tight">Salut, Champion !</h1>
+          <LevelBadge level={stats.currentLevel} className="mt-1" />
+        </div>
         {/* Stats rapides */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <StatsCard
