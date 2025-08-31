@@ -87,6 +87,12 @@ export default function Home() {
       
       // Charger aussi les statistiques utilisateur
       const userStats = await SupabaseService.getUserStats(user.id);
+      
+      // Utiliser le niveau du profil utilisateur (settings) plutôt que celui calculé
+      if (userData.profile?.level_label) {
+        userStats.currentLevel = userData.profile.level_label;
+      }
+      
       setStats(userStats);
     } catch (error) {
       console.error('Error loading user profile:', error);
@@ -174,7 +180,7 @@ export default function Home() {
                 )}
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold leading-tight text-white">Salut, Champion !</h1>
+                <h1 className="text-xl sm:text-2xl font-bold leading-tight text-white">Salut !</h1>
                 <LevelBadge level={displayStats.currentLevel} className="mt-1" />
               </div>
             </div>
@@ -280,12 +286,6 @@ export default function Home() {
           />
         </div>
 
-        {/* Encarts informatifs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <InfoCard />
-          <TipsCard />
-        </div>
-
         {/* Badge débloqué */}
         {displayStats.badges.some(b => b.unlocked) && (
           <Card className="p-4 mb-6 bg-gradient-to-r from-accent/20 to-primary/20 border-accent/30 animate-fade-in">
@@ -358,6 +358,12 @@ export default function Home() {
             </Card>
           )}
           </div>
+        </div>
+
+        {/* Encarts informatifs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <InfoCard />
+          <TipsCard />
         </div>
       </div>
     </div>
