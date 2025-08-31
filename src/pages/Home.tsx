@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { TaskCard } from "@/components/TaskCard";
 import { StatsCard } from "@/components/StatsCard";
 import { LevelBadge } from "@/components/LevelBadge";
@@ -6,68 +5,71 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { taskTemplates, mockUserTasks, mockUserStats } from "@/data/mockData";
-import { TaskTemplate, UserTask, UserStats } from "@/types/game";
-import { Clock, Trophy, Target, Zap } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { AddCustomTaskDialog } from "@/components/AddCustomTaskDialog";
+import { useUserTasks } from "@/hooks/useUserTasks";
+import { taskTemplates, mockUserStats } from "@/data/mockData";
+import { Clock, Trophy, Target, Zap, Plus } from "lucide-react";
 
 export default function Home() {
-  const [userTasks, setUserTasks] = useState<UserTask[]>(mockUserTasks);
-  const [stats, setStats] = useState<UserStats>(mockUserStats);
-  const { toast } = useToast();
+  const { 
+    tasks, 
+    templates, 
+    loading, 
+    completeTask, 
+    snoozeTask, 
+    deleteTask, 
+    addCustomTask,
+    canExecuteEarly 
+  } = useUserTasks();
+  
+  const stats = mockUserStats; // Keep using mock stats for now
 
-  // Get tasks due today
-  const todayTasks = userTasks
-    .filter(task => task.status === 'pending')
-    .map(userTask => {
-      const template = taskTemplates.find(t => t.id === userTask.templateId);
-      return { userTask, template };
+  // Get tasks due today or can be executed early
+  const todayTasks = tasks
+    .filter(task => {
+      if (task.status !== 'pending') return false;
+      
+      const template = templates.find(t => t.id === task.templateId);
+      if (!template && !task.isCustom) return false;
+      
+      // Include custom tasks
+      if (task.isCustom) return true;
+      
+      // Include tasks due today
+      const today = new Date();
+      const taskDate = new Date(task.nextDueAt);
+      const isToday = taskDate.toDateString() === today.toDateString();
+      
+      // Include tasks that can be executed early
+      const earlyExecution = template ? canExecuteEarly(task, template) : false;
+      
+      return isToday || earlyExecution;
     })
-    .filter(item => item.template)
-    .slice(0, 5); // Limit to 5 tasks for demo
+    .slice(0, 8); // Limit to 8 tasks for better UX
 
-  const todayDuration = todayTasks.reduce((sum, item) => sum + (item.template?.durationMin || 0), 0);
-  const todayPoints = todayTasks.reduce((sum, item) => sum + (item.template?.points || 0), 0);
-
-  const handleCompleteTask = (taskId: string) => {
-    setUserTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { ...task, status: 'done' as const, lastDoneAt: new Date() }
-        : task
-    ));
-    
-    const task = userTasks.find(t => t.id === taskId);
-    const template = taskTemplates.find(t => t.id === task?.templateId);
-    
-    if (template) {
-      setStats(prev => ({
-        ...prev,
-        totalPoints: prev.totalPoints + template.points,
-        weeklyPoints: prev.weeklyPoints + template.points,
-        xp: prev.xp + template.points
-      }));
-
-      toast({
-        title: "Tâche terminée ! 🎉",
-        description: `+${template.points} points gagnés`,
-      });
-    }
-  };
-
-  const handleSnoozeTask = (taskId: string) => {
-    setUserTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { ...task, status: 'snoozed' as const }
-        : task
-    ));
-
-    toast({
-      title: "Tâche reportée ⏸️",
-      description: "Tu pourras la faire plus tard !",
-    });
-  };
+  const todayDuration = todayTasks.reduce((sum, task) => {
+    const template = templates.find(t => t.id === task.templateId);
+    return sum + (template?.durationMin || 15); // Default 15min for custom tasks
+  }, 0);
+  
+  const todayPoints = todayTasks.reduce((sum, task) => {
+    const template = templates.find(t => t.id === task.templateId);
+    return sum + (template?.points || task.points);
+  }, 0);
 
   const mainTask = todayTasks[0];
+  const mainTemplate = mainTask ? templates.find(t => t.id === mainTask.templateId) : null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full gradient-primary animate-bounce"></div>
+          <p className="text-muted-foreground">Chargement de tes missions...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,24 +110,32 @@ export default function Home() {
 
       <div className="max-w-4xl mx-auto p-6 -mt-6">
         {/* Mission du jour */}
-        {mainTask && (
+        {mainTask && (mainTemplate || mainTask.isCustom) && (
           <Card className="p-6 mb-6 gradient-card border-2 border-primary/20 shadow-primary animate-slide-up">
             <div className="flex items-center space-x-2 mb-4">
               <Target className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-bold">🎯 Mission du jour</h2>
+              {canExecuteEarly(mainTask, mainTemplate) && (
+                <Badge className="bg-accent text-accent-foreground">
+                  <Zap className="w-3 h-3 mr-1" />
+                  Exécution anticipée
+                </Badge>
+              )}
             </div>
             
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-2">{mainTask.template?.title}</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  {mainTask.isCustom ? mainTask.customTitle : mainTemplate?.title}
+                </h3>
                 <div className="flex items-center space-x-4 text-muted-foreground">
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{mainTask.template?.durationMin} min</span>
+                    <span>{mainTemplate?.durationMin || 15} min</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Zap className="w-4 h-4" />
-                    <span>+{mainTask.template?.points} pts</span>
+                    <span>+{mainTemplate?.points || mainTask.points} pts</span>
                   </div>
                 </div>
               </div>
@@ -133,13 +143,13 @@ export default function Home() {
               <div className="flex space-x-3">
                 <Button 
                   variant="outline"
-                  onClick={() => handleSnoozeTask(mainTask.userTask.id)}
+                  onClick={() => snoozeTask(mainTask.id)}
                   className="text-warning border-warning/20 hover:bg-warning/10"
                 >
                   ⏸ Snooze
                 </Button>
                 <Button 
-                  onClick={() => handleCompleteTask(mainTask.userTask.id)}
+                  onClick={() => completeTask(mainTask.id)}
                   className="gradient-primary hover:opacity-90"
                 >
                   ✅ Fait !
@@ -194,30 +204,51 @@ export default function Home() {
 
         {/* Liste des tâches du jour */}
         <div className="mb-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center space-x-2">
-            <span>📝 Tâches d'aujourd'hui</span>
-            <Badge variant="secondary">{todayTasks.length}</Badge>
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold flex items-center space-x-2">
+              <span>📝 Tâches d'aujourd'hui</span>
+              <Badge variant="secondary">{todayTasks.length}</Badge>
+            </h2>
+            <AddCustomTaskDialog onAddTask={addCustomTask} />
+          </div>
           
           <div className="space-y-3">
-            {todayTasks.map(({ userTask, template }) => (
-              template && (
+            {todayTasks.map((task) => {
+              const template = templates.find(t => t.id === task.templateId);
+              const displayTemplate = template || {
+                id: 'custom',
+                room: 'Autre',
+                title: task.customTitle || 'Tâche personnalisée',
+                frequency: 'daily' as const,
+                durationMin: 15,
+                points: task.points,
+                condition: 'none' as const,
+                isCustom: true
+              };
+              
+              return (
                 <TaskCard
-                  key={userTask.id}
-                  task={template}
-                  status={userTask.status}
-                  onComplete={() => handleCompleteTask(userTask.id)}
-                  onSnooze={() => handleSnoozeTask(userTask.id)}
+                  key={task.id}
+                  task={displayTemplate}
+                  userTask={task}
+                  status={task.status}
+                  onComplete={() => completeTask(task.id)}
+                  onSnooze={() => snoozeTask(task.id)}
+                  onDelete={() => deleteTask(task.id)}
+                  canExecuteEarly={template ? canExecuteEarly(task, template) : false}
                 />
-              )
-            ))}
+              );
+            })}
           </div>
 
           {todayTasks.length === 0 && (
             <Card className="p-8 text-center">
               <div className="text-6xl mb-4">🎉</div>
-              <h3 className="text-xl font-semibold mb-2">Toutes tes tâches sont terminées !</h3>
-              <p className="text-muted-foreground">Profite de ta journée, champion !</p>
+              <h3 className="text-xl font-semibold mb-2">Aucune mission aujourd'hui !</h3>
+              <p className="text-muted-foreground mb-4">
+                Tu peux te reposer ou ajouter une tâche personnalisée.
+              </p>
+              <AddCustomTaskDialog onAddTask={addCustomTask} />
             </Card>
           )}
         </div>

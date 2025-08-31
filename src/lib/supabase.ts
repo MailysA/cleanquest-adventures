@@ -25,6 +25,10 @@ export interface UserTaskRow {
   last_done_at?: string;
   next_due_at: string;
   points: number;
+  is_custom: boolean;
+  custom_title?: string;
+  custom_room?: string;
+  custom_duration?: number;
   created_at?: string;
 }
 

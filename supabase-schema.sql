@@ -42,11 +42,15 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 CREATE TABLE IF NOT EXISTS user_tasks (
     id TEXT PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    template_id TEXT REFERENCES task_templates(id) ON DELETE CASCADE NOT NULL,
+    template_id TEXT REFERENCES task_templates(id) ON DELETE CASCADE,
     status TEXT NOT NULL CHECK (status IN ('pending', 'done', 'snoozed')),
     last_done_at TIMESTAMP WITH TIME ZONE,
     next_due_at TIMESTAMP WITH TIME ZONE NOT NULL,
     points INTEGER NOT NULL,
+    is_custom BOOLEAN NOT NULL DEFAULT FALSE,
+    custom_title TEXT,
+    custom_room TEXT,
+    custom_duration INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 

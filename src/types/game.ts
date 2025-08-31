@@ -6,6 +6,7 @@ export interface TaskTemplate {
   durationMin: number;
   points: number;
   condition: 'none' | 'petsOnly' | 'gardenOnly';
+  isCustom?: boolean;
 }
 
 export interface UserTask {
@@ -16,6 +17,8 @@ export interface UserTask {
   lastDoneAt?: Date;
   nextDueAt: Date;
   points: number;
+  isCustom?: boolean;
+  customTitle?: string;
 }
 
 export interface UserProfile {

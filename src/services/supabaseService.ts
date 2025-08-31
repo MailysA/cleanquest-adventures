@@ -71,7 +71,11 @@ export class SupabaseService {
         status: task.status,
         last_done_at: task.lastDoneAt?.toISOString(),
         next_due_at: task.nextDueAt.toISOString(),
-        points: task.points
+        points: task.points,
+        is_custom: false,
+        custom_title: undefined,
+        custom_room: undefined,
+        custom_duration: undefined
       }));
 
       const { data, error } = await supabase
@@ -236,6 +240,62 @@ export class SupabaseService {
       return data;
     } catch (error) {
       console.error('❌ Error updating user points:', error);
+      throw error;
+    }
+  }
+
+  // Supprimer une tâche
+  static async deleteTask(taskId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('user_tasks')
+        .delete()
+        .eq('id', taskId)
+        .select();
+
+      if (error) throw error;
+      console.log('✅ Task deleted:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error deleting task:', error);
+      throw error;
+    }
+  }
+
+  // Ajouter une tâche personnalisée
+  static async addCustomTask(userId: string, customTask: {
+    title: string;
+    room: string;
+    durationMin: number;
+    points: number;
+  }) {
+    try {
+      const taskId = `${userId}_custom_${Date.now()}`;
+      
+      const newTask = {
+        id: taskId,
+        user_id: userId,
+        template_id: 'custom',
+        status: 'pending',
+        next_due_at: new Date().toISOString(),
+        points: customTask.points,
+        is_custom: true,
+        custom_title: customTask.title,
+        custom_room: customTask.room,
+        custom_duration: customTask.durationMin
+      };
+
+      const { data, error } = await supabase
+        .from('user_tasks')
+        .insert([newTask])
+        .select()
+        .single();
+
+      if (error) throw error;
+      console.log('✅ Custom task added:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error adding custom task:', error);
       throw error;
     }
   }
