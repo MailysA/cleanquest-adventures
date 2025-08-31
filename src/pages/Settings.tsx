@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { LevelBadge } from "@/components/LevelBadge";
 import { GoogleCalendarSync } from "@/components/GoogleCalendarSync";
 import { useAuth } from "@/contexts/AuthContext";
-import { mockUserProfile } from "@/data/mockData";
+import { SupabaseService } from "@/services/supabaseService";
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -22,7 +22,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
-  const [profile, setProfile] = useState(mockUserProfile);
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState({
     daily: true,
     weekly: true,
@@ -30,6 +31,37 @@ export default function Settings() {
   });
   const { toast } = useToast();
   const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    loadUserProfile();
+  }, [user]);
+
+  const loadUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const userData = await SupabaseService.getUserData(user.id);
+      if (userData.profile) {
+        setProfile({
+          housingType: userData.profile.home_type || 'apartment',
+          familyStatus: userData.profile.family_status || 'single', 
+          hasPets: userData.profile.has_pets || false,
+          hasGarden: userData.profile.has_garden || false,
+          currentLevel: userData.profile.level_label || 'apprenti'
+        });
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger le profil",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -39,12 +71,48 @@ export default function Settings() {
     }
   };
 
-  const handleProfileUpdate = (field: string, value: any) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
-    toast({
-      title: "Profil mis à jour",
-      description: "Tes préférences ont été sauvegardées !",
-    });
+  const handleProfileUpdate = async (field: string, value: any) => {
+    if (!user || !profile) return;
+
+    try {
+      const updates: any = {};
+      
+      // Map frontend fields to database fields
+      switch (field) {
+        case 'housingType':
+          updates.home_type = value;
+          break;
+        case 'familyStatus':
+          updates.family_status = value;
+          break;
+        case 'hasPets':
+          updates.has_pets = value;
+          break;
+        case 'hasGarden':
+          updates.has_garden = value;
+          break;
+        case 'currentLevel':
+          updates.level_label = value;
+          break;
+      }
+
+      await SupabaseService.updateUserProfile(user.id, updates);
+      
+      // Update local state
+      setProfile(prev => ({ ...prev, [field]: value }));
+      
+      toast({
+        title: "Profil mis à jour",
+        description: "Tes préférences ont été sauvegardées !",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder les changements",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleResetProgress = () => {
@@ -70,8 +138,15 @@ export default function Settings() {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 sm:p-6 -mt-4 sm:-mt-6">
-        {/* Profil utilisateur */}
-        <Card className="p-4 sm:p-6 mb-6 gradient-card animate-slide-up">
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full gradient-primary animate-bounce"></div>
+            <p className="text-muted-foreground">Chargement du profil...</p>
+          </div>
+        ) : profile ? (
+          <>
+            {/* Profil utilisateur */}
+            <Card className="p-4 sm:p-6 mb-6 gradient-card animate-slide-up">
           <div className="flex items-center space-x-2 mb-4">
             <User className="w-5 h-5 text-primary" />
             <h2 className="text-lg sm:text-xl font-bold">Mon profil</h2>
@@ -293,6 +368,15 @@ export default function Settings() {
             </div>
           </div>
         </Card>
+        </>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Erreur lors du chargement du profil</p>
+            <Button onClick={loadUserProfile} className="mt-4">
+              Réessayer
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

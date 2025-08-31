@@ -2,7 +2,7 @@ export interface TaskTemplate {
   id: string;
   room: string;
   title: string;
-  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly';
+  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   durationMin: number;
   points: number;
   condition: 'none' | 'petsOnly' | 'gardenOnly';

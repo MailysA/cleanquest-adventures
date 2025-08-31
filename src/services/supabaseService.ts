@@ -148,39 +148,70 @@ export class SupabaseService {
     }
   }
 
-  // Récupérer les données utilisateur
+  // Récupérer les données utilisateur avec filtrage des templates selon profil
   static async getUserData(userId: string) {
     try {
       const client = checkSupabaseConnection();
-      const [profileResult, tasksResult, badgesResult] = await Promise.all([
-        client
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .single(),
+      
+      // D'abord récupérer le profil utilisateur pour connaître ses paramètres
+      const { data: profile, error: profileError } = await client
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
+
+      // Ensuite récupérer les templates filtrés selon le profil
+      let templatesQuery = client.from('task_templates').select('*');
+      
+      if (profile) {
+        // Construire le filtre selon les paramètres utilisateur
+        const conditions = [];
         
+        // Toujours inclure les tâches sans condition
+        conditions.push('condition.eq.none');
+        
+        // Inclure les tâches pour animaux si l'utilisateur en a
+        if (profile.has_pets) {
+          conditions.push('condition.eq.petsOnly');
+        }
+        
+        // Inclure les tâches pour jardin si l'utilisateur en a un
+        if (profile.has_garden) {
+          conditions.push('condition.eq.gardenOnly');
+        }
+        
+        // Appliquer le filtre OR
+        templatesQuery = templatesQuery.or(conditions.join(','));
+      }
+
+      const [tasksResult, badgesResult, templatesResult] = await Promise.all([
         client
           .from('user_tasks')
-          .select(`
-            *,
-            task_templates (*)
-          `)
+          .select('*')
           .eq('user_id', userId),
         
         client
           .from('user_badges')
           .select('*')
-          .eq('user_id', userId)
+          .eq('user_id', userId),
+          
+        templatesQuery
       ]);
 
       return {
-        profile: profileResult.data,
+        profile: profile,
         tasks: tasksResult.data,
         badges: badgesResult.data,
+        templates: templatesResult.data,
         errors: {
-          profile: profileResult.error,
+          profile: profileError,
           tasks: tasksResult.error,
-          badges: badgesResult.error
+          badges: badgesResult.error,
+          templates: templatesResult.error
         }
       };
     } catch (error) {
@@ -305,6 +336,35 @@ export class SupabaseService {
       return data;
     } catch (error) {
       console.error('❌ Error adding custom task:', error);
+      throw error;
+    }
+  }
+
+  // Mettre à jour le profil utilisateur
+  static async updateUserProfile(userId: string, updates: {
+    has_pets?: boolean;
+    has_garden?: boolean;
+    home_type?: string;
+    family_status?: string;
+    display_name?: string;
+    avatar_url?: string;
+  }) {
+    try {
+      const client = checkSupabaseConnection();
+      const { data, error } = await client
+        .from('user_profiles')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+        .select();
+
+      if (error) throw error;
+      console.log('✅ User profile updated:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error updating user profile:', error);
       throw error;
     }
   }

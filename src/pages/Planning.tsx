@@ -13,7 +13,8 @@ const frequencies = [
   { value: 'daily', label: 'Quotidiennes', color: 'bg-accent' },
   { value: 'weekly', label: 'Hebdomadaires', color: 'bg-info' },
   { value: 'monthly', label: 'Mensuelles', color: 'bg-primary' },
-  { value: 'quarterly', label: 'Trimestrielles', color: 'bg-success' }
+  { value: 'quarterly', label: 'Trimestrielles', color: 'bg-success' },
+  { value: 'yearly', label: 'Annuelles', color: 'bg-warning' }
 ];
 
 const rooms = [
@@ -78,7 +79,8 @@ export default function Planning() {
     daily: filteredItems.filter(item => item.task.frequency === 'daily'),
     weekly: filteredItems.filter(item => item.task.frequency === 'weekly'),
     monthly: filteredItems.filter(item => item.task.frequency === 'monthly'),
-    quarterly: filteredItems.filter(item => item.task.frequency === 'quarterly')
+    quarterly: filteredItems.filter(item => item.task.frequency === 'quarterly'),
+    yearly: filteredItems.filter(item => item.task.frequency === 'yearly')
   };
 
   const totalDuration = filteredItems.reduce((sum, item) => sum + item.task.durationMin, 0);

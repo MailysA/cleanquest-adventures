@@ -25,6 +25,7 @@ export const useUserTasks = () => {
       setLoading(true);
 
       const userData = await SupabaseService.getUserData(user.id);
+      
       if (userData.tasks) {
         const formattedTasks: UserTask[] = userData.tasks.map((task: any) => ({
           id: task.id,
@@ -38,6 +39,21 @@ export const useUserTasks = () => {
           customTitle: task.custom_title
         }));
         setTasks(formattedTasks);
+      }
+
+      // Utiliser les templates filtrés du service au lieu des mocks
+      if (userData.templates) {
+        const formattedTemplates: TaskTemplate[] = userData.templates.map((template: any) => ({
+          id: template.id,
+          room: template.room,
+          title: template.title,
+          frequency: template.frequency,
+          durationMin: template.duration_min,
+          points: template.points,
+          condition: template.condition,
+          isCustom: false
+        }));
+        setTemplates(formattedTemplates);
       }
     } catch (error: any) {
       console.error('Error loading tasks:', error);
