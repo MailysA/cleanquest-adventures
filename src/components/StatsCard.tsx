@@ -1,11 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import React from "react";
 
 interface StatsCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon?: string;
+  icon?: string | React.ReactNode;
   trend?: 'up' | 'down' | 'neutral';
   className?: string;
 }
@@ -42,7 +43,7 @@ export const StatsCard = ({
           </div>
         </div>
         {icon && (
-          <div className="text-2xl ml-3">{icon}</div>
+          <div className="text-2xl ml-3 text-muted-foreground">{icon}</div>
         )}
       </div>
     </Card>

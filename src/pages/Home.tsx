@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { AddCustomTaskDialog } from "@/components/AddCustomTaskDialog";
 import { useUserTasks } from "@/hooks/useUserTasks";
 import { taskTemplates, mockUserStats } from "@/data/mockData";
-import { Clock, Trophy, Target, Zap, Plus } from "lucide-react";
+import { Clock, Trophy, Target, Zap, Plus, Pause, Check, Star, BarChart, ClipboardList } from "lucide-react";
 
 export default function Home() {
   const { 
@@ -78,11 +78,11 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl sm:text-3xl animate-bounce-in">
-                🧹
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 flex items-center justify-center animate-bounce-in">
+                <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold leading-tight">Salut, Champion ! 👋</h1>
+                <h1 className="text-xl sm:text-2xl font-bold leading-tight">Salut, Champion !</h1>
                 <LevelBadge level={stats.currentLevel} className="mt-1" />
               </div>
             </div>
@@ -114,7 +114,7 @@ export default function Home() {
           <Card className="p-4 sm:p-6 mb-6 gradient-card border-2 border-primary/20 shadow-primary animate-slide-up">
             <div className="flex items-center space-x-2 mb-4">
               <Target className="w-5 h-5 text-primary" />
-              <h2 className="text-lg sm:text-xl font-bold">🎯 Mission du jour</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Mission du jour</h2>
               {canExecuteEarly(mainTask, mainTemplate) && (
                 <Badge className="bg-accent text-accent-foreground text-xs">
                   <Zap className="w-3 h-3 mr-1" />
@@ -148,15 +148,17 @@ export default function Home() {
                   className="text-warning border-warning/20 hover:bg-warning/10 flex-1 sm:flex-none min-h-[44px]"
                   size="sm"
                 >
-                  <span className="hidden sm:inline">⏸ Snooze</span>
-                  <span className="sm:hidden">⏸</span>
+                  <Pause className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Snooze</span>
+                  <span className="sm:hidden">Pause</span>
                 </Button>
                 <Button 
                   onClick={() => completeTask(mainTask.id)}
                   className="gradient-primary hover:opacity-90 flex-1 sm:flex-none min-h-[44px]"
                   size="sm"
                 >
-                  ✅ Fait !
+                  <Check className="w-4 h-4 mr-1" />
+                  Fait !
                 </Button>
               </div>
             </div>
@@ -168,20 +170,20 @@ export default function Home() {
           <StatsCard
             title="Temps estimé aujourd'hui"
             value={`${todayDuration} min`}
-            icon="⏰"
+            icon={<Clock className="w-5 h-5" />}
             subtitle={`${todayTasks.length} tâches`}
           />
           <StatsCard
             title="Points à gagner"
             value={`+${todayPoints}`}
-            icon="⭐"
+            icon={<Star className="w-5 h-5" />}
             trend="up"
             subtitle="pts disponibles"
           />
           <StatsCard
             title="Complétude hebdo"
             value={`${stats.weeklyCompletion}%`}
-            icon="📊"
+            icon={<BarChart className="w-5 h-5" />}
             trend={stats.weeklyCompletion >= 70 ? 'up' : 'neutral'}
             subtitle={stats.weeklyCompletion >= 70 ? 'Excellent !' : 'En progrès'}
           />
@@ -210,7 +212,8 @@ export default function Home() {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center space-x-2">
-              <span>📝 Tâches d'aujourd'hui</span>
+              <ClipboardList className="w-5 h-5" />
+              <span>Tâches d'aujourd'hui</span>
               <Badge variant="secondary">{todayTasks.length}</Badge>
             </h2>
             <AddCustomTaskDialog onAddTask={addCustomTask} />
@@ -247,7 +250,9 @@ export default function Home() {
 
           {todayTasks.length === 0 && (
             <Card className="p-8 text-center">
-              <div className="text-6xl mb-4">🎉</div>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/20 flex items-center justify-center">
+                <Trophy className="w-8 h-8 text-accent" />
+              </div>
               <h3 className="text-xl font-semibold mb-2">Aucune mission aujourd'hui !</h3>
               <p className="text-muted-foreground mb-4">
                 Tu peux te reposer ou ajouter une tâche personnalisée.
