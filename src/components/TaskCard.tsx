@@ -109,7 +109,7 @@ export const TaskCard = ({
                     {task.frequency === 'daily' && <span className="text-xs text-accent">Quotidien</span>}
                     {task.frequency === 'weekly' && <span className="text-xs text-info">Hebdo</span>}
                     {task.frequency === 'monthly' && <span className="text-xs text-primary">Mensuel</span>}
-                    {task.frequency === 'quarterly' && <span className="text-xs text-success">Trimestriel</span>}
+                    {task.frequency === 'quarterly' && <span className="text-xs text-purple-600">Trimestriel</span>}
                     {task.frequency === 'yearly' && <span className="text-xs text-warning">Annuel</span>}
                   </>
                 )}
