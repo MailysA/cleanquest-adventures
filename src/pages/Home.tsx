@@ -16,6 +16,7 @@ import { Clock, Trophy, Target, Zap, Plus, Pause, Check, Star, BarChart, Clipboa
 
 export default function Home() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [stats, setStats] = useState<any>(null);
   const { 
     tasks, 
     templates, 
@@ -29,8 +30,6 @@ export default function Home() {
     canExecuteEarly 
   } = useUserTasks();
   const { user } = useAuth();
-  
-  const stats = mockUserStats; // Keep using mock stats for now
 
   useEffect(() => {
     loadUserProfile();
@@ -53,6 +52,20 @@ export default function Home() {
             loadUserProfile();
           }
         )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_tasks',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Tasks updated:', payload);
+            // Reload stats when tasks change
+            loadUserProfile();
+          }
+        )
         .subscribe();
 
       return () => {
@@ -69,8 +82,14 @@ export default function Home() {
       if (userData.profile?.avatar_url) {
         setAvatarUrl(userData.profile.avatar_url);
       }
+      
+      // Charger aussi les statistiques utilisateur
+      const userStats = await SupabaseService.getUserStats(user.id);
+      setStats(userStats);
     } catch (error) {
       console.error('Error loading user profile:', error);
+      // En cas d'erreur, utiliser les données fictives
+      setStats(mockUserStats);
     }
   };
 
@@ -120,6 +139,9 @@ export default function Home() {
   const mainTask = todayTasks[0];
   const mainTemplate = mainTask ? templates.find(t => t.id === mainTask.templateId) : null;
 
+  // Utiliser les données fictives si les vraies stats ne sont pas encore chargées
+  const displayStats = stats || mockUserStats;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -151,12 +173,12 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold leading-tight text-white">Salut, Champion !</h1>
-                <LevelBadge level={stats.currentLevel} className="mt-1" />
+                <LevelBadge level={displayStats.currentLevel} className="mt-1" />
               </div>
             </div>
             <div className="text-right">
               <div className="text-xs sm:text-sm opacity-90">Complétude hebdo</div>
-              <div className="text-xl sm:text-2xl font-bold">{stats.weeklyCompletion}%</div>
+              <div className="text-xl sm:text-2xl font-bold">{displayStats.weeklyCompletion}%</div>
             </div>
           </div>
 
@@ -164,11 +186,11 @@ export default function Home() {
           <div className="bg-white/10 rounded-lg p-3 sm:p-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs sm:text-sm opacity-90">Progression XP</span>
-              <span className="text-xs sm:text-sm opacity-90">{stats.xp}/{stats.xp + stats.xpToNextLevel} XP</span>
+              <span className="text-xs sm:text-sm opacity-90">{displayStats.xp}/{displayStats.xp + displayStats.xpToNextLevel} XP</span>
             </div>
             <ProgressBar 
-              value={stats.xp} 
-              max={stats.xp + stats.xpToNextLevel}
+              value={displayStats.xp} 
+              max={displayStats.xp + displayStats.xpToNextLevel}
               className="bg-white/20"
               variant="default"
             />
@@ -249,7 +271,7 @@ export default function Home() {
           />
           <StatsCard
             title="Points cette semaine"
-            value={`${stats.weeklyPoints}`}
+            value={`${displayStats.weeklyPoints}`}
             icon={<Trophy className="w-5 h-5" />}
             trend="up"
             subtitle="pts gagnés"
@@ -257,14 +279,14 @@ export default function Home() {
         </div>
 
         {/* Badge débloqué */}
-        {stats.badges.some(b => b.unlocked) && (
+        {displayStats.badges.some(b => b.unlocked) && (
           <Card className="p-4 mb-6 bg-gradient-to-r from-accent/20 to-primary/20 border-accent/30 animate-fade-in">
             <div className="flex items-center space-x-3">
               <Trophy className="w-6 h-6 text-accent" />
               <div>
                 <h3 className="font-semibold">Badge débloqué !</h3>
                 <div className="flex items-center space-x-2 mt-1">
-                  {stats.badges.filter(b => b.unlocked).map(badge => (
+                  {displayStats.badges.filter(b => b.unlocked).map(badge => (
                     <Badge key={badge.id} className="bg-accent text-accent-foreground">
                       {badge.icon} {badge.name}
                     </Badge>

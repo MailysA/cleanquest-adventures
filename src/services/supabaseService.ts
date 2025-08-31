@@ -500,4 +500,107 @@ export class SupabaseService {
       throw error;
     }
   }
+
+  // Calculer les statistiques utilisateur en temps réel
+  static async getUserStats(userId: string) {
+    try {
+      const client = checkSupabaseConnection();
+      
+      // Récupérer le profil utilisateur
+      const { data: profile, error: profileError } = await client
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Récupérer toutes les tâches de l'utilisateur
+      const { data: tasks, error: tasksError } = await client
+        .from('user_tasks')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (tasksError) throw tasksError;
+
+      // Calculer les statistiques de la semaine
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Début de semaine (dimanche)
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const weeklyTasks = tasks?.filter(task => {
+        if (!task.last_done_at) return false;
+        const doneDate = new Date(task.last_done_at);
+        return doneDate >= startOfWeek;
+      }) || [];
+
+      const weeklyPoints = weeklyTasks.reduce((sum, task) => sum + task.points, 0);
+      
+      // Calculer la complétude hebdomadaire
+      const allTasksThisWeek = tasks?.filter(task => {
+        const dueDate = new Date(task.next_due_at);
+        return dueDate >= startOfWeek;
+      }) || [];
+      
+      const completedTasksThisWeek = allTasksThisWeek.filter(task => task.status === 'done');
+      const weeklyCompletion = allTasksThisWeek.length > 0 
+        ? Math.round((completedTasksThisWeek.length / allTasksThisWeek.length) * 100)
+        : 0;
+
+      // Calculer le niveau et XP
+      const xp = profile.xp || 0;
+      const level = this.calculateLevel(xp);
+      const xpToNextLevel = this.getXpToNextLevel(xp);
+
+      // Récupérer les badges
+      const { data: badges, error: badgesError } = await client
+        .from('user_badges')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (badgesError) throw badgesError;
+
+      return {
+        totalPoints: xp,
+        weeklyPoints,
+        weeklyCompletion,
+        currentLevel: level,
+        xp,
+        xpToNextLevel,
+        badges: badges?.map(badge => ({
+          id: badge.id,
+          name: badge.title,
+          description: badge.description || '',
+          icon: '🏆',
+          condition: badge.badge_code,
+          unlocked: true
+        })) || []
+      };
+    } catch (error) {
+      console.error('❌ Error calculating user stats:', error);
+      throw error;
+    }
+  }
+
+  // Calculer le niveau basé sur l'XP
+  private static calculateLevel(xp: number): string {
+    if (xp < 100) return 'Apprenti';
+    if (xp < 300) return 'Novice';
+    if (xp < 600) return 'Adepte';
+    if (xp < 1000) return 'Expert';
+    if (xp < 1500) return 'Maître';
+    return 'Légende';
+  }
+
+  // Calculer l'XP nécessaire pour le prochain niveau
+  private static getXpToNextLevel(currentXp: number): number {
+    const levels = [100, 300, 600, 1000, 1500];
+    for (const levelXp of levels) {
+      if (currentXp < levelXp) {
+        return levelXp - currentXp;
+      }
+    }
+    return 0; // Max level atteint
+  }
 }
