@@ -112,7 +112,7 @@ export const TaskCard = ({
           </div>
           
           {/* Actions pour tâches actives (avec userTask) */}
-          {hasUserTask && status === 'due' && (
+          {hasUserTask && (status === 'due' || status === 'snoozed') && (
             <div className="flex items-center space-x-2 ml-4">
               {onDelete && (
                 <Tooltip>
@@ -127,42 +127,44 @@ export const TaskCard = ({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Supprimer la tâche</p>
+                    <p>Supprimer définitivement cette tâche</p>
                   </TooltipContent>
                 </Tooltip>
               )}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={onSnooze}
-                    className="text-warning border-warning/20 hover:bg-warning/10"
-                    disabled={!onSnooze}
-                  >
-                    <Pause className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Reporter à plus tard</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    size="sm" 
-                    variant="default"
-                    onClick={onComplete}
-                    className="gradient-primary text-primary-foreground hover:opacity-90"
-                    disabled={!onComplete}
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Marquer comme terminé</p>
-                </TooltipContent>
-              </Tooltip>
+              {status === 'due' && onSnooze && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={onSnooze}
+                      className="text-warning border-warning/20 hover:bg-warning/10"
+                    >
+                      <Pause className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Reporter à plus tard</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {status === 'due' && onComplete && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      onClick={onComplete}
+                      className="gradient-primary text-primary-foreground hover:opacity-90"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Marquer comme terminé</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
           )}
 
