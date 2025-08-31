@@ -22,6 +22,31 @@ export default function Profile() {
 
   useEffect(() => {
     loadUserProfile();
+    
+    // Set up real-time subscription for profile changes
+    if (user) {  
+      const profileChannel = supabase
+        .channel('user-profile-changes-profile')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_profiles',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Profile updated:', payload);
+            // Reload profile data when changes are detected
+            loadUserProfile();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(profileChannel);
+      };
+    }
   }, [user]);
 
   const loadUserProfile = async () => {

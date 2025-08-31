@@ -11,6 +11,7 @@ import { useUserTasks } from "@/hooks/useUserTasks";
 import { SupabaseService } from "@/services/supabaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { taskTemplates, mockUserStats } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
 import { Clock, Trophy, Target, Zap, Plus, Pause, Check, Star, BarChart, ClipboardList, User } from "lucide-react";
 
 export default function Home() {
@@ -33,6 +34,31 @@ export default function Home() {
 
   useEffect(() => {
     loadUserProfile();
+    
+    // Set up real-time subscription for profile changes
+    if (user) {
+      const profileChannel = supabase
+        .channel('user-profile-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_profiles',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Profile updated:', payload);
+            // Reload profile data when changes are detected
+            loadUserProfile();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(profileChannel);
+      };
+    }
   }, [user]);
 
   const loadUserProfile = async () => {
