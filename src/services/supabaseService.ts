@@ -250,7 +250,7 @@ export class SupabaseService {
   }
 
   // Mettre à jour le statut d'une tâche
-  static async updateTaskStatus(taskId: string, status: 'due' | 'done' | 'snoozed') {
+  static async updateTaskStatus(taskId: string, status: 'due' | 'done' | 'snoozed' | 'deleted') {
     try {
       const client = checkSupabaseConnection();
       const updates: any = { status };

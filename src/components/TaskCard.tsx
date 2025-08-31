@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 interface TaskCardProps {
   task: TaskTemplate;
   userTask?: UserTask;
-  status?: 'due' | 'done' | 'snoozed';
+  status?: 'due' | 'done' | 'snoozed' | 'deleted';
   onComplete?: () => void;
   onSnooze?: () => void;
   onDelete?: () => void;
@@ -46,6 +46,7 @@ export const TaskCard = ({
 }: TaskCardProps) => {
   const isDone = status === 'done';
   const isSnoozed = status === 'snoozed';
+  const isDeleted = status === 'deleted';
   const isCustom = userTask?.isCustom || task.isCustom;
   const displayTitle = userTask?.customTitle || task.title;
   const displayRoom = isCustom ? (userTask as any)?.customRoom || task.room : task.room;
@@ -57,6 +58,7 @@ export const TaskCard = ({
         "p-4 transition-smooth hover:shadow-md animate-fade-in",
         isDone && "bg-success/10 border-success/20",
         isSnoozed && "bg-warning/10 border-warning/20",
+        isDeleted && "bg-muted/30 border-muted opacity-50",
         canExecuteEarly && status === 'due' && "border-accent/30 bg-accent/5",
         className
       )}>
@@ -92,7 +94,8 @@ export const TaskCard = ({
               </div>
               <h3 className={cn(
                 "font-medium mb-2",
-                isDone && "line-through text-muted-foreground"
+                isDone && "line-through text-muted-foreground",
+                isDeleted && "line-through text-muted-foreground/60"
               )}>
                 {displayTitle}
               </h3>
@@ -218,6 +221,12 @@ export const TaskCard = ({
           {isSnoozed && (
             <div className="text-warning ml-4">
               <Pause className="w-6 h-6" />
+            </div>
+          )}
+          
+          {isDeleted && (
+            <div className="text-muted-foreground ml-4 opacity-60">
+              <Trash2 className="w-6 h-6" />
             </div>
           )}
         </div>

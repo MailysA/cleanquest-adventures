@@ -13,7 +13,7 @@ export interface UserTask {
   id: string;
   userId: string;
   templateId: string;
-  status: 'due' | 'done' | 'snoozed';
+  status: 'due' | 'done' | 'snoozed' | 'deleted';
   lastDoneAt?: Date;
   nextDueAt: Date;
   points: number;

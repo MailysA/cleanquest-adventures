@@ -127,9 +127,13 @@ export const useUserTasks = () => {
 
   const deleteTask = async (taskId: string) => {
     try {
-      await SupabaseService.deleteTask(taskId);
+      await SupabaseService.updateTaskStatus(taskId, 'deleted');
       
-      setTasks(prev => prev.filter(t => t.id !== taskId));
+      setTasks(prev => prev.map(t => 
+        t.id === taskId 
+          ? { ...t, status: 'deleted' as const }
+          : t
+      ));
 
       toast({
         title: "Tâche supprimée",
