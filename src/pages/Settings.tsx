@@ -266,7 +266,7 @@ export default function Settings() {
                   </Button>
                 ))}
               </div>
-              <div className="mt-2">
+              <div className="mt-4">
                 <LevelBadge level={profile.currentLevel} />
               </div>
             </div>
