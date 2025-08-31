@@ -19,14 +19,14 @@ const frequencies = [
 ];
 
 const rooms = [
-  { name: 'Toutes', color: 'bg-muted text-muted-foreground', hover: 'hover:bg-muted/80' },
-  { name: 'Cuisine', color: 'bg-orange-500 text-white', hover: 'hover:bg-orange-500/20 hover:text-orange-700 hover:border-orange-300' },
-  { name: 'Salon', color: 'bg-blue-500 text-white', hover: 'hover:bg-blue-500/20 hover:text-blue-700 hover:border-blue-300' }, 
-  { name: 'Salle de bain', color: 'bg-cyan-500 text-white', hover: 'hover:bg-cyan-500/20 hover:text-cyan-700 hover:border-cyan-300' },
-  { name: 'WC', color: 'bg-teal-500 text-white', hover: 'hover:bg-teal-500/20 hover:text-teal-700 hover:border-teal-300' },
-  { name: 'Chambre', color: 'bg-purple-500 text-white', hover: 'hover:bg-purple-500/20 hover:text-purple-700 hover:border-purple-300' },
-  { name: 'Jardin', color: 'bg-green-500 text-white', hover: 'hover:bg-green-500/20 hover:text-green-700 hover:border-green-300' },
-  { name: 'Buanderie', color: 'bg-indigo-500 text-white', hover: 'hover:bg-indigo-500/20 hover:text-indigo-700 hover:border-indigo-300' }
+  { name: 'Toutes', color: 'bg-muted text-muted-foreground', hover: 'hover:bg-muted/80', hoverSelected: 'hover:bg-muted/90' },
+  { name: 'Cuisine', color: 'bg-orange-500 text-white', hover: 'hover:bg-orange-500/20 hover:text-orange-700 hover:border-orange-300', hoverSelected: 'hover:bg-orange-600' },
+  { name: 'Salon', color: 'bg-blue-500 text-white', hover: 'hover:bg-blue-500/20 hover:text-blue-700 hover:border-blue-300', hoverSelected: 'hover:bg-blue-600' }, 
+  { name: 'Salle de bain', color: 'bg-cyan-500 text-white', hover: 'hover:bg-cyan-500/20 hover:text-cyan-700 hover:border-cyan-300', hoverSelected: 'hover:bg-cyan-600' },
+  { name: 'WC', color: 'bg-teal-500 text-white', hover: 'hover:bg-teal-500/20 hover:text-teal-700 hover:border-teal-300', hoverSelected: 'hover:bg-teal-600' },
+  { name: 'Chambre', color: 'bg-purple-500 text-white', hover: 'hover:bg-purple-500/20 hover:text-purple-700 hover:border-purple-300', hoverSelected: 'hover:bg-purple-600' },
+  { name: 'Jardin', color: 'bg-green-500 text-white', hover: 'hover:bg-green-500/20 hover:text-green-700 hover:border-green-300', hoverSelected: 'hover:bg-green-600' },
+  { name: 'Buanderie', color: 'bg-indigo-500 text-white', hover: 'hover:bg-indigo-500/20 hover:text-indigo-700 hover:border-indigo-300', hoverSelected: 'hover:bg-indigo-600' }
 ];
 
 export default function Planning() {
@@ -186,7 +186,7 @@ export default function Planning() {
                   onClick={() => setSelectedRoom(roomObj.name)}
                   className={cn(
                     selectedRoom === roomObj.name 
-                      ? `${roomObj.color} border-0` 
+                      ? `${roomObj.color} ${roomObj.hoverSelected} border-0` 
                       : `${roomObj.hover}`,
                     "transition-all duration-200"
                   )}
