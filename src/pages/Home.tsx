@@ -48,6 +48,16 @@ export default function Home() {
     }
   };
 
+  // Refresh avatar when returning to home page
+  useEffect(() => {
+    const handleFocus = () => {
+      loadUserProfile();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user]);
+
   // Get tasks due today or can be executed early
   const todayTasks = tasks
     .filter(task => {

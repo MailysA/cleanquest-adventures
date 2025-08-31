@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { LevelBadge } from "@/components/LevelBadge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { mockUserStats } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
+import { SupabaseService } from "@/services/supabaseService";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Trophy, Star, TrendingUp, Award, Camera, Upload, User, BarChart, Target } from "lucide-react";
 
@@ -16,6 +18,24 @@ export default function Profile() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    loadUserProfile();
+  }, [user]);
+
+  const loadUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const userData = await SupabaseService.getUserData(user.id);
+      if (userData.profile?.avatar_url) {
+        setAvatarUrl(userData.profile.avatar_url);
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -57,22 +77,23 @@ export default function Profile() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL with cache-busting parameter
+      const timestamp = Date.now();
       const { data } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
-      const publicUrl = data.publicUrl;
+      const publicUrlWithCacheBust = `${data.publicUrl}?t=${timestamp}`;
 
       // Update user profile with avatar URL
       const { error: updateError } = await supabase
         .from('user_profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: publicUrlWithCacheBust })
         .eq('user_id', user.id);
 
       if (updateError) throw updateError;
 
-      setAvatarUrl(publicUrl);
+      setAvatarUrl(publicUrlWithCacheBust);
       toast({
         title: "Succès",
         description: "Photo de profil mise à jour !",
