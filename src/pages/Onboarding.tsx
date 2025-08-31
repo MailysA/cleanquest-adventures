@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UserProfile } from "@/types/game";
+import { useAuth } from "@/contexts/AuthContext";
+import { SupabaseService } from "@/services/supabaseService";
+import { useToast } from "@/hooks/use-toast";
 
 const questions = [
   {
@@ -60,28 +63,71 @@ const defaultProfile: Partial<UserProfile> = {
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [profile, setProfile] = useState<Partial<UserProfile>>({});
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const currentQuestion = questions[currentStep];
   const isLastStep = currentStep === questions.length - 1;
 
-  const handleAnswer = (value: any) => {
+  const handleAnswer = async (value: any) => {
     const newProfile = { ...profile, [currentQuestion.id]: value };
     setProfile(newProfile);
 
     if (isLastStep) {
-      // Save profile and redirect
-      localStorage.setItem('userProfile', JSON.stringify(newProfile));
-      navigate('/home');
+      await saveProfileAndRedirect(newProfile);
     } else {
       setCurrentStep(currentStep + 1);
     }
   };
 
-  const handleSkip = () => {
-    // Save default profile and redirect
-    localStorage.setItem('userProfile', JSON.stringify(defaultProfile));
-    navigate('/home');
+  const saveProfileAndRedirect = async (profileData: Partial<UserProfile>) => {
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour sauvegarder le profil",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Mapper les données du profil vers le format de la base de données
+      const dbProfileData = {
+        home_type: profileData.housingType || 'apartment',
+        family_status: profileData.familyStatus || 'single',
+        has_pets: profileData.hasPets || false,
+        has_garden: profileData.hasGarden || false,
+        level_label: profileData.currentLevel || 'apprenti'
+      };
+
+      await SupabaseService.updateUserProfile(user.id, dbProfileData);
+      
+      // Sauvegarder aussi localement pour la compatibilité
+      localStorage.setItem('userProfile', JSON.stringify(profileData));
+      
+      toast({
+        title: "Profil créé !",
+        description: "Bienvenue dans CleanQuest !",
+      });
+      
+      navigate('/home');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder le profil",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    await saveProfileAndRedirect(defaultProfile);
   };
 
   return (
@@ -97,9 +143,10 @@ export default function Onboarding() {
           <Button
             variant="ghost"
             onClick={handleSkip}
+            disabled={isLoading}
             className="mt-6 text-xs text-muted-foreground hover:text-primary"
           >
-            Passer →
+            {isLoading ? "Sauvegarde..." : "Passer →"}
           </Button>
         </div>
 
@@ -115,6 +162,7 @@ export default function Onboarding() {
                 variant="outline"
                 className="w-full justify-start p-6 h-auto hover:border-primary transition-smooth min-h-[64px] rounded-lg"
                 onClick={() => handleAnswer(option.value)}
+                disabled={isLoading}
               >
                 <span className="text-2xl mr-4">{option.icon}</span>
                 <div className="text-left flex-1">

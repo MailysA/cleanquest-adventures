@@ -32,18 +32,18 @@ export class SupabaseService {
   }
 
   // Créer un profil utilisateur
-  static async createUserProfile(userId: string) {
+  static async createUserProfile(userId: string, profileData?: any) {
     try {
       const client = checkSupabaseConnection();
       const profileForDB = {
         user_id: userId,
-        home_type: mockUserProfile.housingType,
-        family_status: mockUserProfile.familyStatus,
-        has_pets: mockUserProfile.hasPets,
-        has_garden: mockUserProfile.hasGarden,
-        level_label: mockUserProfile.currentLevel,
-        weekly_completion: mockUserStats.weeklyCompletion,
-        xp: mockUserStats.xp
+        home_type: profileData?.home_type || 'apartment',
+        family_status: profileData?.family_status || 'single',
+        has_pets: profileData?.has_pets || false,
+        has_garden: profileData?.has_garden || false,
+        level_label: profileData?.level_label || 'apprenti',
+        weekly_completion: 0.00,
+        xp: 0
       };
 
       const { data, error } = await client
