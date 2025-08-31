@@ -78,7 +78,13 @@ export const useUserTasks = () => {
       const template = templates.find(t => t.id === task?.templateId);
       
       if (task && template) {
-        await SupabaseService.updateUserPoints(user.id, template.points);
+        // Vérifier si c'est une exécution anticipée
+        const isEarlyExecution = canExecuteEarly(task, template);
+        const basePoints = template.points;
+        const bonusPoints = isEarlyExecution ? 2 : 0;
+        const totalPoints = basePoints + bonusPoints;
+        
+        await SupabaseService.updateUserPoints(user.id, totalPoints);
         
         setTasks(prev => prev.map(t => 
           t.id === taskId 
@@ -86,10 +92,17 @@ export const useUserTasks = () => {
             : t
         ));
 
-        toast({
-          title: "Tâche terminée ! 🎉",
-          description: `+${template.points} points gagnés`,
-        });
+        if (isEarlyExecution) {
+          toast({
+            title: "Tâche anticipée terminée ! 🚀",
+            description: `+${basePoints} points + 2 points bonus = ${totalPoints} points gagnés`,
+          });
+        } else {
+          toast({
+            title: "Tâche terminée ! 🎉",
+            description: `+${totalPoints} points gagnés`,
+          });
+        }
       }
     } catch (error: any) {
       console.error('Error completing task:', error);
