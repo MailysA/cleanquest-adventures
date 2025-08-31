@@ -123,10 +123,7 @@ export default function Home() {
                   <User className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 )}
               </div>
-             <div>
-              <h1 className="text-xl sm:text-2xl font-bold leading-tight">Salut, Champion !</h1>
-              <LevelBadge level={stats.currentLevel} className="mt-1" />
-            </div>
+             
             </div>
             <div className="text-right">
               <div className="text-xs sm:text-sm opacity-90">Points cette semaine</div>
@@ -206,7 +203,11 @@ export default function Home() {
             </div>
           </Card>
         )}
-      
+        {/* Badge level*/}
+         <div>
+          <h1 className="text-xl sm:text-2xl font-bold leading-tight">Salut, Champion !</h1>
+          <LevelBadge level={stats.currentLevel} className="mt-1" />
+        </div>
         {/* Stats rapides */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <StatsCard
@@ -231,7 +232,25 @@ export default function Home() {
           />
         </div>
 
-      
+        {/* Badge débloqué */}
+        {stats.badges.some(b => b.unlocked) && (
+          <Card className="p-4 mb-6 bg-gradient-to-r from-accent/20 to-primary/20 border-accent/30 animate-fade-in">
+            <div className="flex items-center space-x-3">
+              <Trophy className="w-6 h-6 text-accent" />
+              <div>
+                <h3 className="font-semibold">Badge débloqué !</h3>
+                <div className="flex items-center space-x-2 mt-1">
+                  {stats.badges.filter(b => b.unlocked).map(badge => (
+                    <Badge key={badge.id} className="bg-accent text-accent-foreground">
+                      {badge.icon} {badge.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Liste des tâches du jour */}
         <div className="mb-6">
           <div className="flex items-center mb-4">
@@ -271,6 +290,7 @@ export default function Home() {
             })}
           </div>
 
+          <div className="mb-6">
           {todayTasks.length === 0 && (
             <Card className="p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/20 flex items-center justify-center">
@@ -283,26 +303,7 @@ export default function Home() {
               <AddCustomTaskDialog onAddTask={addCustomTask} />
             </Card>
           )}
-
-            {/* Badge débloqué */}
-        {stats.badges.some(b => b.unlocked) && (
-          <Card className="p-4 mb-6 bg-gradient-to-r from-accent/20 to-primary/20 border-accent/30 animate-fade-in">
-            <div className="flex items-center space-x-3">
-              <Trophy className="w-6 h-6 text-accent" />
-              <div>
-                <h3 className="font-semibold">Badge débloqué !</h3>
-                <div className="flex items-center space-x-2 mt-1">
-                  {stats.badges.filter(b => b.unlocked).map(badge => (
-                    <Badge key={badge.id} className="bg-accent text-accent-foreground">
-                      {badge.icon} {badge.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
-
+          </div>
         </div>
       </div>
     </div>
