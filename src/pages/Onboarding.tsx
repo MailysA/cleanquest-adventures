@@ -71,21 +71,21 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl font-bold mb-3 gradient-hero bg-clip-text text-transparent">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
+      <div className="max-w-lg w-full">
+        <div className="text-center mb-6 sm:mb-8 animate-fade-in">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-3 gradient-hero bg-clip-text text-transparent leading-tight">
             Bienvenue dans ton aventure CleanQuest ✨
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base px-2">
             Dis-nous qui tu es pour adapter tes missions de nettoyage.
           </p>
         </div>
 
-        <Card className="p-6 gradient-card animate-slide-up">
+        <Card className="p-4 sm:p-6 gradient-card animate-slide-up">
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 Question {currentStep + 1} sur {questions.length}
               </span>
               <div className="flex space-x-1">
@@ -99,7 +99,9 @@ export default function Onboarding() {
                 ))}
               </div>
             </div>
-            <h2 className="text-xl font-semibold mb-6">{currentQuestion.question}</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-6 leading-tight">
+              {currentQuestion.question}
+            </h2>
           </div>
 
           <div className="space-y-3">
@@ -107,14 +109,16 @@ export default function Onboarding() {
               <Button
                 key={option.value}
                 variant="outline"
-                className="w-full justify-start p-4 h-auto hover:border-primary/50 hover:bg-primary/5 transition-smooth"
+                className="w-full justify-start p-4 sm:p-5 h-auto hover:border-primary/50 hover:bg-primary/5 transition-smooth min-h-[60px] sm:min-h-[70px] active:scale-[0.98]"
                 onClick={() => handleAnswer(option.value)}
               >
-                <span className="text-2xl mr-3">{option.icon}</span>
-                <div className="text-left">
-                  <div className="font-medium">{option.label}</div>
+                <span className="text-2xl sm:text-3xl mr-3 flex-shrink-0">{option.icon}</span>
+                <div className="text-left flex-1">
+                  <div className="font-medium text-sm sm:text-base">{option.label}</div>
                   {option.subtitle && (
-                    <div className="text-sm text-muted-foreground">{option.subtitle}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground mt-1">
+                      {option.subtitle}
+                    </div>
                   )}
                 </div>
               </Button>
@@ -123,7 +127,7 @@ export default function Onboarding() {
 
           {isLastStep && (
             <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground px-2">
                 Clique sur ton niveau pour lancer ton aventure !
               </p>
             </div>
@@ -135,7 +139,7 @@ export default function Onboarding() {
             <Button
               variant="ghost"
               onClick={() => setCurrentStep(currentStep - 1)}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground min-h-[44px] px-6"
             >
               ← Retour
             </Button>

@@ -24,31 +24,31 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="gradient-hero text-primary-foreground p-6">
+      <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center text-4xl animate-bounce-in">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center text-3xl sm:text-4xl animate-bounce-in">
             🏆
           </div>
-          <h1 className="text-2xl font-bold mb-2">Ton Profil CleanQuest</h1>
+          <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight">Ton Profil CleanQuest</h1>
           <LevelBadge level={stats.currentLevel} className="mb-4" />
-          <div className="text-lg font-semibold">{stats.totalPoints} points au total</div>
+          <div className="text-base sm:text-lg font-semibold">{stats.totalPoints} points au total</div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 -mt-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 -mt-4 sm:-mt-6">
         {/* Progression vers le niveau suivant */}
-        <Card className="p-6 mb-6 gradient-card animate-slide-up">
+        <Card className="p-4 sm:p-6 mb-6 gradient-card animate-slide-up">
           <div className="flex items-center space-x-2 mb-4">
             <TrendingUp className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-bold">Progression XP</h2>
+            <h2 className="text-lg sm:text-xl font-bold">Progression XP</h2>
           </div>
           
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 {currentThreshold.next ? `Vers ${currentThreshold.next}` : 'Niveau maximum atteint !'}
               </span>
-              <span className="text-sm font-medium">
+              <span className="text-xs sm:text-sm font-medium">
                 {stats.xp} / {currentThreshold.max} XP
               </span>
             </div>
@@ -60,7 +60,7 @@ export default function Profile() {
           </div>
           
           {currentThreshold.next && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Plus que {currentThreshold.max - stats.xp} XP pour devenir {currentThreshold.next} !
             </p>
           )}

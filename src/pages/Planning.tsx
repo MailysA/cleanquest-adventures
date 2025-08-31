@@ -99,30 +99,30 @@ export default function Planning() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="gradient-hero text-primary-foreground p-6">
+      <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center space-x-3 mb-4">
-            <Calendar className="w-8 h-8" />
+            <Calendar className="w-6 h-6 sm:w-8 sm:h-8" />
             <div>
-              <h1 className="text-2xl font-bold">Planning des tâches</h1>
-              <p className="opacity-90">Organise tes missions de nettoyage</p>
+              <h1 className="text-xl sm:text-2xl font-bold leading-tight">Planning des tâches</h1>
+              <p className="opacity-90 text-sm sm:text-base">Organise tes missions de nettoyage</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4">
             <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold">{filteredItems.length}</div>
-              <div className="text-sm opacity-90">tâches</div>
+              <div className="text-base sm:text-lg font-bold">{filteredItems.length}</div>
+              <div className="text-xs sm:text-sm opacity-90">tâches</div>
             </div>
             <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold">{totalDuration}min</div>
-              <div className="text-sm opacity-90">durée totale</div>
+              <div className="text-base sm:text-lg font-bold">{totalDuration}min</div>
+              <div className="text-xs sm:text-sm opacity-90">durée totale</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 -mt-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 -mt-4 sm:-mt-6">
         {/* Bouton d'initialisation des données */}
         <div className="mb-6">
           <InitializeDataButton />

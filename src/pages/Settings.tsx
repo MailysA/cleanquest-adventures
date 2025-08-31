@@ -57,30 +57,30 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="gradient-hero text-primary-foreground p-6">
+      <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center space-x-3">
-            <SettingsIcon className="w-8 h-8" />
+            <SettingsIcon className="w-6 h-6 sm:w-8 sm:h-8" />
             <div>
-              <h1 className="text-2xl font-bold">Paramètres</h1>
-              <p className="opacity-90">Personnalise ton expérience CleanQuest</p>
+              <h1 className="text-xl sm:text-2xl font-bold leading-tight">Paramètres</h1>
+              <p className="opacity-90 text-sm sm:text-base">Personnalise ton expérience CleanQuest</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 -mt-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 -mt-4 sm:-mt-6">
         {/* Profil utilisateur */}
-        <Card className="p-6 mb-6 gradient-card animate-slide-up">
+        <Card className="p-4 sm:p-6 mb-6 gradient-card animate-slide-up">
           <div className="flex items-center space-x-2 mb-4">
             <User className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-bold">Mon profil</h2>
+            <h2 className="text-lg sm:text-xl font-bold">Mon profil</h2>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-4 sm:space-y-6">
             {/* Type de logement */}
             <div>
-              <h3 className="font-medium mb-2 flex items-center space-x-2">
+              <h3 className="font-medium mb-2 flex items-center space-x-2 text-sm sm:text-base">
                 <Home className="w-4 h-4" />
                 <span>Type de logement</span>
               </h3>
@@ -95,10 +95,11 @@ export default function Settings() {
                     variant={profile.housingType === option.value ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleProfileUpdate('housingType', option.value)}
-                    className={profile.housingType === option.value ? "gradient-primary" : ""}
+                    className={`${profile.housingType === option.value ? "gradient-primary" : ""} min-h-[40px] text-xs sm:text-sm`}
                   >
                     <span className="mr-1">{option.icon}</span>
-                    {option.label}
+                    <span className="hidden sm:inline">{option.label}</span>
+                    <span className="sm:hidden">{option.label.split(' ')[0]}</span>
                   </Button>
                 ))}
               </div>
@@ -106,7 +107,7 @@ export default function Settings() {
 
             {/* Situation familiale */}
             <div>
-              <h3 className="font-medium mb-2 flex items-center space-x-2">
+              <h3 className="font-medium mb-2 flex items-center space-x-2 text-sm sm:text-base">
                 <Users className="w-4 h-4" />
                 <span>Situation familiale</span>
               </h3>
@@ -120,7 +121,7 @@ export default function Settings() {
                     variant={profile.familyStatus === option.value ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleProfileUpdate('familyStatus', option.value)}
-                    className={profile.familyStatus === option.value ? "gradient-primary" : ""}
+                    className={`${profile.familyStatus === option.value ? "gradient-primary" : ""} min-h-[40px] text-xs sm:text-sm flex-1 sm:flex-none`}
                   >
                     <span className="mr-1">{option.icon}</span>
                     {option.label}
@@ -130,11 +131,11 @@ export default function Settings() {
             </div>
 
             {/* Options avec switch */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
               <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <PawPrint className="w-4 h-4" />
-                  <span className="font-medium">Animaux domestiques</span>
+                  <PawPrint className="w-4 h-4 flex-shrink-0" />
+                  <span className="font-medium text-sm sm:text-base">Animaux domestiques</span>
                 </div>
                 <Switch
                   checked={profile.hasPets}
@@ -144,8 +145,8 @@ export default function Settings() {
               
               <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
                 <div className="flex items-center space-x-2">
-                  <Trees className="w-4 h-4" />
-                  <span className="font-medium">Jardin/Extérieur</span>
+                  <Trees className="w-4 h-4 flex-shrink-0" />
+                  <span className="font-medium text-sm sm:text-base">Jardin/Extérieur</span>
                 </div>
                 <Switch
                   checked={profile.hasGarden}
@@ -156,7 +157,7 @@ export default function Settings() {
 
             {/* Niveau actuel */}
             <div>
-              <h3 className="font-medium mb-2">Niveau actuel</h3>
+              <h3 className="font-medium mb-2 text-sm sm:text-base">Niveau actuel</h3>
               <div className="flex flex-wrap gap-2">
                 {[
                   { value: 'apprenti', label: 'Apprenti' },
@@ -168,7 +169,7 @@ export default function Settings() {
                     variant={profile.currentLevel === level.value ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleProfileUpdate('currentLevel', level.value)}
-                    className={profile.currentLevel === level.value ? "gradient-primary" : ""}
+                    className={`${profile.currentLevel === level.value ? "gradient-primary" : ""} min-h-[40px] text-xs sm:text-sm`}
                   >
                     {level.label}
                   </Button>

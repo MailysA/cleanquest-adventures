@@ -72,31 +72,31 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header with avatar and level */}
-      <div className="gradient-hero text-primary-foreground p-6">
+      <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-3xl animate-bounce-in">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl sm:text-3xl animate-bounce-in">
                 🧹
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Salut, Champion ! 👋</h1>
+                <h1 className="text-xl sm:text-2xl font-bold leading-tight">Salut, Champion ! 👋</h1>
                 <LevelBadge level={stats.currentLevel} className="mt-1" />
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm opacity-90">Points cette semaine</div>
-              <div className="text-2xl font-bold">{stats.weeklyPoints}</div>
+              <div className="text-xs sm:text-sm opacity-90">Points cette semaine</div>
+              <div className="text-xl sm:text-2xl font-bold">{stats.weeklyPoints}</div>
             </div>
           </div>
 
           {/* XP Progress */}
-          <div className="bg-white/10 rounded-lg p-4">
+          <div className="bg-white/10 rounded-lg p-3 sm:p-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm opacity-90">Progression XP</span>
-              <span className="text-sm opacity-90">{stats.xp}/{stats.xp + stats.xpToNextLevel} XP</span>
+              <span className="text-xs sm:text-sm opacity-90">Progression XP</span>
+              <span className="text-xs sm:text-sm opacity-90">{stats.xp}/{stats.xp + stats.xpToNextLevel} XP</span>
             </div>
             <ProgressBar 
               value={stats.xp} 
@@ -108,49 +108,53 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 -mt-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 -mt-4 sm:-mt-6">
         {/* Mission du jour */}
         {mainTask && (mainTemplate || mainTask.isCustom) && (
-          <Card className="p-6 mb-6 gradient-card border-2 border-primary/20 shadow-primary animate-slide-up">
+          <Card className="p-4 sm:p-6 mb-6 gradient-card border-2 border-primary/20 shadow-primary animate-slide-up">
             <div className="flex items-center space-x-2 mb-4">
               <Target className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-bold">🎯 Mission du jour</h2>
+              <h2 className="text-lg sm:text-xl font-bold">🎯 Mission du jour</h2>
               {canExecuteEarly(mainTask, mainTemplate) && (
-                <Badge className="bg-accent text-accent-foreground">
+                <Badge className="bg-accent text-accent-foreground text-xs">
                   <Zap className="w-3 h-3 mr-1" />
-                  Exécution anticipée
+                  <span className="hidden sm:inline">Exécution anticipée</span>
+                  <span className="sm:hidden">Anticipée</span>
                 </Badge>
               )}
             </div>
             
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-2">
+                <h3 className="text-base sm:text-lg font-semibold mb-2 leading-tight">
                   {mainTask.isCustom ? mainTask.customTitle : mainTemplate?.title}
                 </h3>
-                <div className="flex items-center space-x-4 text-muted-foreground">
+                <div className="flex items-center space-x-3 sm:space-x-4 text-muted-foreground">
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{mainTemplate?.durationMin || 15} min</span>
+                    <span className="text-sm">{mainTemplate?.durationMin || 15} min</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Zap className="w-4 h-4" />
-                    <span>+{mainTemplate?.points || mainTask.points} pts</span>
+                    <span className="text-sm">+{mainTemplate?.points || mainTask.points} pts</span>
                   </div>
                 </div>
               </div>
               
-              <div className="flex space-x-3">
+              <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto">
                 <Button 
                   variant="outline"
                   onClick={() => snoozeTask(mainTask.id)}
-                  className="text-warning border-warning/20 hover:bg-warning/10"
+                  className="text-warning border-warning/20 hover:bg-warning/10 flex-1 sm:flex-none min-h-[44px]"
+                  size="sm"
                 >
-                  ⏸ Snooze
+                  <span className="hidden sm:inline">⏸ Snooze</span>
+                  <span className="sm:hidden">⏸</span>
                 </Button>
                 <Button 
                   onClick={() => completeTask(mainTask.id)}
-                  className="gradient-primary hover:opacity-90"
+                  className="gradient-primary hover:opacity-90 flex-1 sm:flex-none min-h-[44px]"
+                  size="sm"
                 >
                   ✅ Fait !
                 </Button>
