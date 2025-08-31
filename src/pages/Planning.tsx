@@ -66,9 +66,14 @@ export default function Planning() {
     }),
     // Add available templates that don't have active user tasks
     ...templates
-      .filter(template => !tasks.some(task => task.templateId === template.id))
+      .filter(template => !tasks.some(task => task.templateId === template.id && task.status === 'due'))
       .map(template => ({ task: template, userTask: null }))
   ];
+  
+  // Séparer les tâches par status pour l'affichage
+  const dueTasks = allTasks.filter(item => !item.userTask || item.userTask.status === 'due');
+  const snoozedTasks = allTasks.filter(item => item.userTask && item.userTask.status === 'snoozed');
+  const doneTasks = allTasks.filter(item => item.userTask && item.userTask.status === 'done');
   
   // Fonction pour changer la fréquence et ajuster automatiquement la pièce
   const handleFrequencyChange = (frequency: string) => {
@@ -92,24 +97,38 @@ export default function Planning() {
     }
   };
 
-  // Filter tasks based on selections
-  const filteredItems = allTasks.filter(item => {
+  // Filter tasks based on selections - now include all statuses
+  const filteredDueTasks = dueTasks.filter(item => {
     const frequencyMatch = selectedFrequency === 'all' || item.task.frequency === selectedFrequency;
     const roomMatch = selectedRoom === 'Toutes' || item.task.room === selectedRoom;
     return frequencyMatch && roomMatch;
   });
 
-  // Group tasks by frequency
+  const filteredSnoozedTasks = snoozedTasks.filter(item => {
+    const frequencyMatch = selectedFrequency === 'all' || item.task.frequency === selectedFrequency;
+    const roomMatch = selectedRoom === 'Toutes' || item.task.room === selectedRoom;
+    return frequencyMatch && roomMatch;
+  });
+
+  const filteredDoneTasks = doneTasks.filter(item => {
+    const frequencyMatch = selectedFrequency === 'all' || item.task.frequency === selectedFrequency;
+    const roomMatch = selectedRoom === 'Toutes' || item.task.room === selectedRoom;
+    return frequencyMatch && roomMatch;
+  });
+
+  const allFilteredTasks = [...filteredDueTasks, ...filteredSnoozedTasks, ...filteredDoneTasks];
+
+  // Group tasks by frequency - only for due tasks
   const tasksByFrequency = {
-    daily: filteredItems.filter(item => item.task.frequency === 'daily'),
-    weekly: filteredItems.filter(item => item.task.frequency === 'weekly'),
-    monthly: filteredItems.filter(item => item.task.frequency === 'monthly'),
-    quarterly: filteredItems.filter(item => item.task.frequency === 'quarterly'),
-    yearly: filteredItems.filter(item => item.task.frequency === 'yearly')
+    daily: filteredDueTasks.filter(item => item.task.frequency === 'daily'),
+    weekly: filteredDueTasks.filter(item => item.task.frequency === 'weekly'),
+    monthly: filteredDueTasks.filter(item => item.task.frequency === 'monthly'),
+    quarterly: filteredDueTasks.filter(item => item.task.frequency === 'quarterly'),
+    yearly: filteredDueTasks.filter(item => item.task.frequency === 'yearly')
   };
 
-  const totalDuration = filteredItems.reduce((sum, item) => sum + item.task.durationMin, 0);
-  const totalPoints = filteredItems.reduce((sum, item) => sum + item.task.points, 0);
+  const totalDuration = allFilteredTasks.reduce((sum, item) => sum + item.task.durationMin, 0);
+  const totalPoints = allFilteredTasks.reduce((sum, item) => sum + item.task.points, 0);
 
   if (loading) {
     return (
@@ -137,7 +156,7 @@ export default function Planning() {
           
           <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4">
             <div className="bg-white/10 rounded-lg p-3 text-center">
-              <div className="text-base sm:text-lg font-bold">{filteredItems.length}</div>
+              <div className="text-base sm:text-lg font-bold">{allFilteredTasks.length}</div>
               <div className="text-xs sm:text-sm opacity-90">tâches</div>
             </div>
             <div className="bg-white/10 rounded-lg p-3 text-center">
@@ -204,8 +223,10 @@ export default function Planning() {
             <div className="flex items-center space-x-2">
               <ClipboardList className="w-6 h-6 text-primary" />
               <div>
-                <div className="text-2xl font-bold">{filteredItems.length}</div>
+              <div>
+                <div className="text-2xl font-bold">{allFilteredTasks.length}</div>
                 <div className="text-sm text-muted-foreground">Tâches</div>
+              </div>
               </div>
             </div>
           </Card>
@@ -237,6 +258,7 @@ export default function Planning() {
         {/* Tâches par fréquence */}
         {selectedFrequency === 'all' ? (
           <div className="space-y-6">
+            {/* Tâches à faire */}
             {Object.entries(tasksByFrequency).map(([frequency, items]) => {
               if (items.length === 0) return null;
               
@@ -276,31 +298,152 @@ export default function Planning() {
                 </div>
               );
             })}
+            
+            {/* Tâches reportées */}
+            {filteredSnoozedTasks.length > 0 && (
+              <div className="animate-fade-in">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Badge className="bg-warning text-warning-foreground">
+                    Reportées
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {filteredSnoozedTasks.length} tâche{filteredSnoozedTasks.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                
+                <div className="space-y-3 opacity-75">
+                  {filteredSnoozedTasks.map((item) => (
+                    <TaskCard 
+                      key={item.userTask.id} 
+                      task={item.task}
+                      userTask={item.userTask}
+                      status={item.userTask.status}
+                      onComplete={() => completeTask(item.userTask.id)}
+                      onSnooze={() => snoozeTask(item.userTask.id)}
+                      onDelete={() => deleteTask(item.userTask.id)}
+                      canExecuteEarly={canExecuteEarly(item.userTask, item.task)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Tâches terminées */}
+            {filteredDoneTasks.length > 0 && (
+              <div className="animate-fade-in">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Badge className="bg-success text-success-foreground">
+                    Terminées
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {filteredDoneTasks.length} tâche{filteredDoneTasks.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                
+                <div className="space-y-3 opacity-60">
+                  {filteredDoneTasks.map((item) => (
+                    <TaskCard 
+                      key={item.userTask.id} 
+                      task={item.task}
+                      userTask={item.userTask}
+                      status={item.userTask.status}
+                      onComplete={() => completeTask(item.userTask.id)}
+                      onSnooze={() => snoozeTask(item.userTask.id)}
+                      onDelete={() => deleteTask(item.userTask.id)}
+                      canExecuteEarly={canExecuteEarly(item.userTask, item.task)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="space-y-3 animate-fade-in">
-            {filteredItems.map((item) => (
-              <TaskCard 
-                key={item.userTask?.id || item.task.id} 
-                task={item.task}
-                userTask={item.userTask || undefined}
-                status={item.userTask?.status || 'due'}
-                onComplete={item.userTask ? () => completeTask(item.userTask.id) : undefined}
-                onSnooze={item.userTask ? () => snoozeTask(item.userTask.id) : undefined}
-                onDelete={item.userTask ? () => deleteTask(item.userTask.id) : undefined}
-                onAddToToday={!item.userTask ? () => addTemplateToToday(item.task.id) : undefined}
-                onRemoveFromToday={item.userTask && item.task.frequency !== 'daily' ? () => removeFromToday(item.userTask.id) : undefined}
-                canExecuteEarly={
-                  item.userTask && item.task 
-                    ? canExecuteEarly(item.userTask, item.task) 
-                    : false
-                }
-              />
-            ))}
+          <div className="space-y-6 animate-fade-in">
+            {/* Tâches à faire */}
+            {filteredDueTasks.length > 0 && (
+              <div className="space-y-3">
+                {filteredDueTasks.map((item) => (
+                  <TaskCard 
+                    key={item.userTask?.id || item.task.id} 
+                    task={item.task}
+                    userTask={item.userTask || undefined}
+                    status={item.userTask?.status || 'due'}
+                    onComplete={item.userTask ? () => completeTask(item.userTask.id) : undefined}
+                    onSnooze={item.userTask ? () => snoozeTask(item.userTask.id) : undefined}
+                    onDelete={item.userTask ? () => deleteTask(item.userTask.id) : undefined}
+                    onAddToToday={!item.userTask ? () => addTemplateToToday(item.task.id) : undefined}
+                    onRemoveFromToday={item.userTask && item.task.frequency !== 'daily' ? () => removeFromToday(item.userTask.id) : undefined}
+                    canExecuteEarly={
+                      item.userTask && item.task 
+                        ? canExecuteEarly(item.userTask, item.task) 
+                        : false
+                    }
+                  />
+                ))}
+              </div>
+            )}
+            
+            {/* Tâches reportées */}
+            {filteredSnoozedTasks.length > 0 && (
+              <div className="animate-fade-in">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Badge className="bg-warning text-warning-foreground">
+                    Reportées
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {filteredSnoozedTasks.length} tâche{filteredSnoozedTasks.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                
+                <div className="space-y-3 opacity-75">
+                  {filteredSnoozedTasks.map((item) => (
+                    <TaskCard 
+                      key={item.userTask.id} 
+                      task={item.task}
+                      userTask={item.userTask}
+                      status={item.userTask.status}
+                      onComplete={() => completeTask(item.userTask.id)}
+                      onSnooze={() => snoozeTask(item.userTask.id)}
+                      onDelete={() => deleteTask(item.userTask.id)}
+                      canExecuteEarly={canExecuteEarly(item.userTask, item.task)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Tâches terminées */}
+            {filteredDoneTasks.length > 0 && (
+              <div className="animate-fade-in">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Badge className="bg-success text-success-foreground">
+                    Terminées
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {filteredDoneTasks.length} tâche{filteredDoneTasks.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                
+                <div className="space-y-3 opacity-60">
+                  {filteredDoneTasks.map((item) => (
+                    <TaskCard 
+                      key={item.userTask.id} 
+                      task={item.task}
+                      userTask={item.userTask}
+                      status={item.userTask.status}
+                      onComplete={() => completeTask(item.userTask.id)}
+                      onSnooze={() => snoozeTask(item.userTask.id)}
+                      onDelete={() => deleteTask(item.userTask.id)}
+                      canExecuteEarly={canExecuteEarly(item.userTask, item.task)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {filteredItems.length === 0 && (
+        {allFilteredTasks.length === 0 && (
           <Card className="p-8 text-center animate-fade-in">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/20 flex items-center justify-center">
               <Search className="w-8 h-8 text-muted-foreground" />

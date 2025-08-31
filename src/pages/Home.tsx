@@ -112,18 +112,34 @@ export default function Home() {
   }, [user]);
 
   // Get tasks due today or can be executed early
+  console.log('Home: All tasks:', tasks);
+  console.log('Home: All templates:', templates);
+  
   const todayTasks = tasks
     .filter(task => {
-      if (task.status !== 'due') return false;
+      console.log('Home: Filtering task:', task);
+      if (task.status !== 'due') {
+        console.log('Home: Task status not due:', task.status);
+        return false;
+      }
       
       const template = templates.find(t => t.id === task.templateId);
-      if (!template && !task.isCustom) return false;
+      if (!template && !task.isCustom) {
+        console.log('Home: No template found and not custom:', task.templateId);
+        return false;
+      }
       
       // Include custom tasks (always available)
-      if (task.isCustom) return true;
+      if (task.isCustom) {
+        console.log('Home: Including custom task:', task.customTitle);
+        return true;
+      }
       
       // Include daily tasks (always available for today)
-      if (template && template.frequency === 'daily') return true;
+      if (template && template.frequency === 'daily') {
+        console.log('Home: Including daily task:', template.title);
+        return true;
+      }
       
       // For other frequencies, check if due today or can be executed early
       const today = new Date();
@@ -133,9 +149,13 @@ export default function Home() {
       // Include tasks that can be executed early
       const earlyExecution = template ? canExecuteEarly(task, template) : false;
       
+      console.log('Home: Task check - isToday:', isToday, 'earlyExecution:', earlyExecution, 'frequency:', template?.frequency);
+      
       return isToday || earlyExecution;
     })
     .slice(0, 8); // Limit to 8 tasks for better UX
+    
+  console.log('Home: Final todayTasks:', todayTasks);
 
   const todayDuration = todayTasks.reduce((sum, task) => {
     const template = templates.find(t => t.id === task.templateId);
