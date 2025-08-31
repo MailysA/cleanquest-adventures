@@ -85,64 +85,42 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
-      <div className="max-w-lg w-full">
-        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
-          <div className="mb-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
-              <span className="text-2xl">✨</span>
-            </div>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4 gradient-hero bg-clip-text text-transparent leading-tight">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-12 animate-fade-in">
+          <h1 className="text-4xl font-light mb-3 text-foreground">
             CleanQuest
           </h1>
-          <p className="text-muted-foreground text-base sm:text-lg max-w-md mx-auto leading-relaxed">
-            Personnalise ton expérience de nettoyage en quelques questions
+          <p className="text-muted-foreground text-sm">
+            {currentStep + 1} / {questions.length}
           </p>
           <Button
             variant="ghost"
             onClick={handleSkip}
-            className="mt-4 text-muted-foreground hover:text-primary text-sm"
+            className="mt-6 text-xs text-muted-foreground hover:text-primary"
           >
-            Passer les questions →
+            Passer →
           </Button>
         </div>
 
-        <Card className="p-4 sm:p-6 gradient-card animate-slide-up">
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                Question {currentStep + 1} sur {questions.length}
-              </span>
-              <div className="flex space-x-1">
-                {questions.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-smooth ${
-                      index <= currentStep ? 'bg-primary' : 'bg-muted'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-            <h2 className="text-lg sm:text-xl font-semibold mb-6 leading-tight">
-              {currentQuestion.question}
-            </h2>
-          </div>
+        <div className="bg-card rounded-xl p-8 border border-border/50 animate-slide-up">
+          <h2 className="text-xl font-medium mb-8 text-center leading-relaxed">
+            {currentQuestion.question}
+          </h2>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {currentQuestion.options.map((option) => (
               <Button
                 key={option.value}
                 variant="outline"
-                className="w-full justify-start p-4 sm:p-5 h-auto hover:border-primary/50 hover:bg-primary/5 transition-smooth min-h-[60px] sm:min-h-[70px] active:scale-[0.98]"
+                className="w-full justify-start p-6 h-auto hover:border-primary transition-smooth min-h-[64px] rounded-lg"
                 onClick={() => handleAnswer(option.value)}
               >
-                <span className="text-2xl sm:text-3xl mr-3 flex-shrink-0">{option.icon}</span>
+                <span className="text-2xl mr-4">{option.icon}</span>
                 <div className="text-left flex-1">
-                  <div className="font-medium text-sm sm:text-base">{option.label}</div>
+                  <div className="font-medium">{option.label}</div>
                   {option.subtitle && (
-                    <div className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    <div className="text-sm text-muted-foreground mt-1">
                       {option.subtitle}
                     </div>
                   )}
@@ -150,22 +128,14 @@ export default function Onboarding() {
               </Button>
             ))}
           </div>
-
-          {isLastStep && (
-            <div className="mt-6 text-center">
-              <p className="text-xs sm:text-sm text-muted-foreground px-2">
-                Clique sur ton niveau pour lancer ton aventure !
-              </p>
-            </div>
-          )}
-        </Card>
+        </div>
 
         {currentStep > 0 && (
-          <div className="mt-4 text-center animate-fade-in">
+          <div className="mt-8 text-center animate-fade-in">
             <Button
               variant="ghost"
               onClick={() => setCurrentStep(currentStep - 1)}
-              className="text-muted-foreground hover:text-foreground min-h-[44px] px-6"
+              className="text-muted-foreground hover:text-foreground text-sm"
             >
               ← Retour
             </Button>
