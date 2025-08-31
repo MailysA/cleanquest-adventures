@@ -464,4 +464,40 @@ export class SupabaseService {
       throw error;
     }
   }
+
+  // Réinitialiser la progression utilisateur
+  static async resetUserProgress(userId: string) {
+    try {
+      const client = checkSupabaseConnection();
+      
+      // Réinitialiser le profil utilisateur (XP et progression)
+      await client
+        .from('user_profiles')
+        .update({
+          xp: 0,
+          weekly_completion: 0.00,
+          level_label: 'apprenti',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      // Remettre toutes les tâches à "due"
+      await client
+        .from('user_tasks')
+        .update({
+          status: 'due',
+          last_done_at: null,
+          snooze_count: 0,
+          next_due_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      console.log('✅ User progress reset successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error resetting user progress:', error);
+      throw error;
+    }
+  }
 }

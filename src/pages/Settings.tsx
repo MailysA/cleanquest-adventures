@@ -115,11 +115,24 @@ export default function Settings() {
     }
   };
 
-  const handleResetProgress = () => {
-    toast({
-      title: "Progression réinitialisée",
-      description: "Ton aventure CleanQuest recommence à zéro !",
-    });
+  const handleResetProgress = async () => {
+    if (!user) return;
+
+    try {
+      await SupabaseService.resetUserProgress(user.id);
+      
+      toast({
+        title: "Progression réinitialisée",
+        description: "Ton aventure CleanQuest recommence à zéro !",
+      });
+    } catch (error) {
+      console.error('Error resetting progress:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de réinitialiser la progression",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

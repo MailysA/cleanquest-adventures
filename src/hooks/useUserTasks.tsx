@@ -242,7 +242,7 @@ export const useUserTasks = () => {
       loadUserTasks();
       
       // Set up real-time subscription for task changes
-      const channel = supabase
+      const tasksChannel = supabase
         .channel('user-tasks-changes')
         .on(
           'postgres_changes',
@@ -260,8 +260,28 @@ export const useUserTasks = () => {
         )
         .subscribe();
 
+      // Set up real-time subscription for profile changes
+      const profileChannel = supabase
+        .channel('user-profile-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'user_profiles',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Real-time profile change:', payload);
+            // Refresh tasks when profile changes (affects task filtering)
+            loadUserTasks();
+          }
+        )
+        .subscribe();
+
       return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(tasksChannel);
+        supabase.removeChannel(profileChannel);
       };
     } else {
       setTasks([]);
