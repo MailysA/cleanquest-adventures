@@ -56,7 +56,8 @@ export default function Settings() {
       toast({
         title: "Erreur",
         description: "Impossible de charger le profil",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setLoading(false);
@@ -104,13 +105,15 @@ export default function Settings() {
       toast({
         title: "Profil mis à jour",
         description: "Tes préférences ont été sauvegardées !",
+        duration: 2000,
       });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
         title: "Erreur",
         description: "Impossible de sauvegarder les changements",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
     }
   };
@@ -124,13 +127,15 @@ export default function Settings() {
       toast({
         title: "Progression réinitialisée",
         description: "Ton aventure CleanQuest recommence à zéro !",
+        duration: 2000,
       });
     } catch (error) {
       console.error('Error resetting progress:', error);
       toast({
         title: "Erreur",
         description: "Impossible de réinitialiser la progression",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
     }
   };
@@ -174,9 +179,9 @@ export default function Settings() {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {[
-                  { value: 'house', label: 'Maison', icon: '🏠' },
-                  { value: 'apartment', label: 'Appartement', icon: '🏢' },
-                  { value: 'student', label: 'Logement étudiant', icon: '🎓' }
+                  { value: 'house', label: 'Maison' },
+                  { value: 'apartment', label: 'Appartement' },
+                  { value: 'student', label: 'Logement étudiant' }
                 ].map((option) => (
                   <Button
                     key={option.value}
@@ -185,7 +190,6 @@ export default function Settings() {
                     onClick={() => handleProfileUpdate('housingType', option.value)}
                     className={`${profile.housingType === option.value ? "gradient-primary" : ""} min-h-[40px] text-xs sm:text-sm`}
                   >
-                    <span className="mr-1">{option.icon}</span>
                     <span className="hidden sm:inline">{option.label}</span>
                     <span className="sm:hidden">{option.label.split(' ')[0]}</span>
                   </Button>
@@ -201,8 +205,8 @@ export default function Settings() {
               </h3>
               <div className="flex gap-2">
                 {[
-                  { value: 'single', label: 'Célibataire', icon: '👤' },
-                  { value: 'parent', label: 'Parent', icon: '👨‍👩‍👧' }
+                  { value: 'single', label: 'Célibataire' },
+                  { value: 'parent', label: 'Parent' }
                 ].map((option) => (
                   <Button
                     key={option.value}
@@ -211,7 +215,6 @@ export default function Settings() {
                     onClick={() => handleProfileUpdate('familyStatus', option.value)}
                     className={`${profile.familyStatus === option.value ? "gradient-primary" : ""} min-h-[40px] text-xs sm:text-sm flex-1 sm:flex-none`}
                   >
-                    <span className="mr-1">{option.icon}</span>
                     {option.label}
                   </Button>
                 ))}
