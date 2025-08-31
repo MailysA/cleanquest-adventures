@@ -1,13 +1,94 @@
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/StatsCard";
 import { LevelBadge } from "@/components/LevelBadge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { mockUserStats } from "@/data/mockData";
-import { Trophy, Star, TrendingUp, Award } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Trophy, Star, TrendingUp, Award, Camera, Upload, User } from "lucide-react";
 
 export default function Profile() {
   const stats = mockUserStats;
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un fichier image",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Erreur", 
+        description: "L'image doit faire moins de 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non authentifié");
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const publicUrl = data.publicUrl;
+
+      // Update user profile with avatar URL
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(publicUrl);
+      toast({
+        title: "Succès",
+        description: "Photo de profil mise à jour !",
+      });
+
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la photo",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const levelThresholds = {
     apprenti: { min: 0, max: 100, next: 'regulier' },
@@ -26,9 +107,41 @@ export default function Profile() {
       {/* Header */}
       <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center text-3xl sm:text-4xl animate-bounce-in">
-            🏆
+          {/* Avatar Section */}
+          <div className="relative inline-block mb-4">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full bg-white/20 overflow-hidden flex items-center justify-center animate-bounce-in">
+              {avatarUrl ? (
+                <img 
+                  src={avatarUrl} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-8 h-8 sm:w-10 sm:h-10 text-white/80" />
+              )}
+            </div>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Camera className="w-4 h-4" />
+              )}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
           </div>
+          
           <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight">Ton Profil CleanQuest</h1>
           <LevelBadge level={stats.currentLevel} className="mb-4" />
           <div className="text-base sm:text-lg font-semibold">{stats.totalPoints} points au total</div>

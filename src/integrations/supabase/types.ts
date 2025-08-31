@@ -16,30 +16,36 @@ export type Database = {
     Tables: {
       task_templates: {
         Row: {
+          category: string
           condition: string
           duration_min: number
           frequency: string
           id: string
+          min_level: string
           points: number
           room: string
           tips: string | null
           title: string
         }
         Insert: {
+          category?: string
           condition: string
           duration_min: number
           frequency: string
           id: string
+          min_level?: string
           points: number
           room: string
           tips?: string | null
           title: string
         }
         Update: {
+          category?: string
           condition?: string
           duration_min?: number
           frequency?: string
           id?: string
+          min_level?: string
           points?: number
           room?: string
           tips?: string | null
@@ -87,6 +93,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           display_name: string | null
           email: string | null
@@ -96,6 +103,7 @@ export type Database = {
           has_pets: boolean
           home_type: string | null
           level_label: string
+          level_rank: number | null
           sqm: number | null
           updated_at: string
           user_id: string
@@ -103,6 +111,7 @@ export type Database = {
           xp: number
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -112,6 +121,7 @@ export type Database = {
           has_pets?: boolean
           home_type?: string | null
           level_label?: string
+          level_rank?: number | null
           sqm?: number | null
           updated_at?: string
           user_id: string
@@ -119,6 +129,7 @@ export type Database = {
           xp?: number
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -128,6 +139,7 @@ export type Database = {
           has_pets?: boolean
           home_type?: string | null
           level_label?: string
+          level_rank?: number | null
           sqm?: number | null
           updated_at?: string
           user_id?: string
