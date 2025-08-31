@@ -231,7 +231,7 @@ export default function Planning() {
                         key={item.userTask?.id || item.task.id} 
                         task={item.task}
                         userTask={item.userTask || undefined}
-                        status={item.userTask?.status || 'pending'}
+                        status={item.userTask?.status || 'due'}
                         onComplete={item.userTask ? () => completeTask(item.userTask.id) : undefined}
                         onSnooze={item.userTask ? () => snoozeTask(item.userTask.id) : undefined}
                         onDelete={item.userTask ? () => deleteTask(item.userTask.id) : undefined}
@@ -256,7 +256,7 @@ export default function Planning() {
                 key={item.userTask?.id || item.task.id} 
                 task={item.task}
                 userTask={item.userTask || undefined}
-                status={item.userTask?.status || 'pending'}
+                status={item.userTask?.status || 'due'}
                 onComplete={item.userTask ? () => completeTask(item.userTask.id) : undefined}
                 onSnooze={item.userTask ? () => snoozeTask(item.userTask.id) : undefined}
                 onDelete={item.userTask ? () => deleteTask(item.userTask.id) : undefined}

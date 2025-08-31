@@ -107,7 +107,7 @@ export const mockUserTasks: UserTask[] = [
     id: "task1",
     userId: "user1",
     templateId: "cuisine-vaisselle",
-    status: "pending",
+    status: "due",
     nextDueAt: new Date(),
     points: 5
   },
@@ -115,7 +115,7 @@ export const mockUserTasks: UserTask[] = [
     id: "task2",
     userId: "user1",
     templateId: "salon-aspirateur",
-    status: "pending",
+    status: "due",
     nextDueAt: new Date(),
     points: 15
   },

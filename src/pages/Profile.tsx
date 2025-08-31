@@ -222,7 +222,34 @@ export default function Profile() {
           />
         </div>
 
-        {/* Badges */}
+        {/* Statistiques détaillées */}
+        <Card className="p-6 animate-fade-in">
+          <div className="flex items-center space-x-2 mb-4">
+            <Star className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold">Statistiques détaillées</h2>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-muted/20 rounded-lg">
+              <div className="text-2xl font-bold text-primary">{stats.totalPoints}</div>
+              <div className="text-sm text-muted-foreground">Points totaux</div>
+            </div>
+            <div className="text-center p-4 bg-muted/20 rounded-lg">
+              <div className="text-2xl font-bold text-success">12</div>
+              <div className="text-sm text-muted-foreground">Tâches cette semaine</div>
+            </div>
+            <div className="text-center p-4 bg-muted/20 rounded-lg">
+              <div className="text-2xl font-bold text-info">7</div>
+              <div className="text-sm text-muted-foreground">Jours d'affilée</div>
+            </div>
+            <div className="text-center p-4 bg-muted/20 rounded-lg">
+              <div className="text-2xl font-bold text-warning">3</div>
+              <div className="text-sm text-muted-foreground">Badges débloqués</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Badges - déplacé en bas */}
         <Card className="p-6 mb-6 animate-fade-in">
           <div className="flex items-center space-x-2 mb-4">
             <Award className="w-5 h-5 text-accent" />
@@ -263,33 +290,6 @@ export default function Profile() {
                 </div>
               </div>
             ))}
-          </div>
-        </Card>
-
-        {/* Statistiques détaillées */}
-        <Card className="p-6 animate-fade-in">
-          <div className="flex items-center space-x-2 mb-4">
-            <Star className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-bold">Statistiques détaillées</h2>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-muted/20 rounded-lg">
-              <div className="text-2xl font-bold text-primary">{stats.totalPoints}</div>
-              <div className="text-sm text-muted-foreground">Points totaux</div>
-            </div>
-            <div className="text-center p-4 bg-muted/20 rounded-lg">
-              <div className="text-2xl font-bold text-success">12</div>
-              <div className="text-sm text-muted-foreground">Tâches cette semaine</div>
-            </div>
-            <div className="text-center p-4 bg-muted/20 rounded-lg">
-              <div className="text-2xl font-bold text-info">7</div>
-              <div className="text-sm text-muted-foreground">Jours d'affilée</div>
-            </div>
-            <div className="text-center p-4 bg-muted/20 rounded-lg">
-              <div className="text-2xl font-bold text-warning">3</div>
-              <div className="text-sm text-muted-foreground">Badges débloqués</div>
-            </div>
           </div>
         </Card>
       </div>

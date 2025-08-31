@@ -161,7 +161,7 @@ export const useUserTasks = () => {
           id: newTask.id,
           userId: newTask.user_id,
           templateId: 'custom',
-          status: 'pending',
+          status: 'due',
           nextDueAt: new Date(),
           points: newTask.points,
           isCustom: true,

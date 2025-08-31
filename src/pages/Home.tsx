@@ -61,7 +61,7 @@ export default function Home() {
   // Get tasks due today or can be executed early
   const todayTasks = tasks
     .filter(task => {
-      if (task.status !== 'pending') return false;
+      if (task.status !== 'due') return false;
       
       const template = templates.find(t => t.id === task.templateId);
       if (!template && !task.isCustom) return false;

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 interface TaskCardProps {
   task: TaskTemplate;
   userTask?: UserTask;
-  status?: 'pending' | 'done' | 'snoozed';
+  status?: 'due' | 'done' | 'snoozed';
   onComplete?: () => void;
   onSnooze?: () => void;
   onDelete?: () => void;
@@ -34,7 +34,7 @@ const getRoomIcon = (room: string) => {
 export const TaskCard = ({ 
   task, 
   userTask,
-  status = 'pending', 
+  status = 'due', 
   onComplete, 
   onSnooze, 
   onDelete,
@@ -55,7 +55,7 @@ export const TaskCard = ({
       "p-4 transition-smooth hover:shadow-md animate-fade-in",
       isDone && "bg-success/10 border-success/20",
       isSnoozed && "bg-warning/10 border-warning/20",
-      canExecuteEarly && status === 'pending' && "border-accent/30 bg-accent/5",
+      canExecuteEarly && status === 'due' && "border-accent/30 bg-accent/5",
       className
     )}>
       <div className="flex items-start justify-between">
@@ -72,7 +72,7 @@ export const TaskCard = ({
                   Personnalisée
                 </Badge>
               )}
-              {canExecuteEarly && status === 'pending' && (
+              {canExecuteEarly && status === 'due' && (
                 <Badge className="text-xs bg-accent text-accent-foreground">
                   <Zap className="w-3 h-3 mr-1" />
                   Exécution anticipée
@@ -107,7 +107,7 @@ export const TaskCard = ({
         </div>
         
         {/* Actions pour tâches actives (avec userTask) */}
-        {hasUserTask && status === 'pending' && (
+        {hasUserTask && status === 'due' && (
           <div className="flex items-center space-x-2 ml-4">
             {onDelete && (
               <Button 
@@ -158,7 +158,7 @@ export const TaskCard = ({
         )}
 
         {/* Action pour retirer des tâches d'aujourd'hui */}
-        {hasUserTask && task.frequency !== 'daily' && status === 'pending' && onRemoveFromToday && (
+        {hasUserTask && task.frequency !== 'daily' && status === 'due' && onRemoveFromToday && (
           <div className="flex items-center space-x-2 ml-4">
             <Button 
               size="sm" 
