@@ -22,28 +22,38 @@ export default function Profile() {
   const { user } = useAuth();
 
   const loadUserProfile = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('Profile: No user found, returning early');
+      setIsLoading(false);
+      return;
+    }
     
+    console.log('Profile: Starting to load user profile for user:', user.id);
     try {
       setIsLoading(true);
       const userData = await SupabaseService.getUserData(user.id);
+      console.log('Profile: User data loaded:', userData);
+      
       if (userData.profile?.avatar_url) {
         setAvatarUrl(userData.profile.avatar_url);
       }
       
       // Charger aussi les statistiques utilisateur
       const userStats = await SupabaseService.getUserStats(user.id);
+      console.log('Profile: User stats loaded:', userStats);
       setStats(userStats);
     } catch (error) {
       console.error('Error loading user profile:', error);
       // En cas d'erreur, utiliser les données fictives
       setStats(mockUserStats);
     } finally {
+      console.log('Profile: Finished loading, setting isLoading to false');
       setIsLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
+    console.log('Profile: useEffect triggered, user:', user);
     if (user) {
       loadUserProfile();
       
@@ -69,8 +79,10 @@ export default function Profile() {
       return () => {
         supabase.removeChannel(profileChannel);
       };
+    } else {
+      setIsLoading(false);
     }
-  }, [user, loadUserProfile]);
+  }, [user]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -156,13 +168,15 @@ export default function Profile() {
   // Utiliser les données fictives si les vraies stats ne sont pas encore chargées
   const displayStats = stats || mockUserStats;
   
-  if (isLoading && !stats) {
+  console.log('Profile: Render - isLoading:', isLoading, 'stats:', stats, 'user:', user);
+  
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background pb-20">
         <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
           <div className="max-w-4xl mx-auto text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 animate-bounce"></div>
-            <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight">Chargement...</h1>
+            <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight">Chargement de ton profil...</h1>
           </div>
         </div>
       </div>
