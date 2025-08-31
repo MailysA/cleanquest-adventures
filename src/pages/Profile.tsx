@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Trophy, Star, TrendingUp, Award, Camera, Upload, User, BarChart, Target } from "lucide-react";
 
 export default function Profile() {
-  const stats = mockUserStats;
+  const [stats, setStats] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +41,20 @@ export default function Profile() {
             loadUserProfile();
           }
         )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_tasks',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Tasks updated:', payload);
+            // Reload stats when tasks change
+            loadUserProfile();
+          }
+        )
         .subscribe();
 
       return () => {
@@ -57,8 +71,14 @@ export default function Profile() {
       if (userData.profile?.avatar_url) {
         setAvatarUrl(userData.profile.avatar_url);
       }
+      
+      // Charger aussi les statistiques utilisateur
+      const userStats = await SupabaseService.getUserStats(user.id);
+      setStats(userStats);
     } catch (error) {
       console.error('Error loading user profile:', error);
+      // En cas d'erreur, utiliser les données fictives
+      setStats(mockUserStats);
     }
   };
 
@@ -143,9 +163,11 @@ export default function Profile() {
     sensei: { min: 600, max: 1000, next: null }
   };
 
-  const currentThreshold = levelThresholds[stats.currentLevel];
+  // Utiliser les données fictives si les vraies stats ne sont pas encore chargées
+  const displayStats = stats || mockUserStats;
+  const currentThreshold = levelThresholds[displayStats.currentLevel];
   const progressToNext = currentThreshold.next 
-    ? ((stats.xp - currentThreshold.min) / (currentThreshold.max - currentThreshold.min)) * 100
+    ? ((displayStats.xp - currentThreshold.min) / (currentThreshold.max - currentThreshold.min)) * 100
     : 100;
 
   return (
@@ -189,8 +211,8 @@ export default function Profile() {
           </div>
           
           <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight">Ton Profil CleanQuest</h1>
-          <LevelBadge level={stats.currentLevel} className="mb-4" />
-          <div className="text-base sm:text-lg font-semibold">{stats.totalPoints} points au total</div>
+          <LevelBadge level={displayStats.currentLevel} className="mb-4" />
+          <div className="text-base sm:text-lg font-semibold">{displayStats.totalPoints} points au total</div>
         </div>
       </div>
 
@@ -208,11 +230,11 @@ export default function Profile() {
                 {currentThreshold.next ? `Vers ${currentThreshold.next}` : 'Niveau maximum atteint !'}
               </span>
               <span className="text-xs sm:text-sm font-medium">
-                {stats.xp} / {currentThreshold.max} XP
+                {displayStats.xp} / {currentThreshold.max} XP
               </span>
             </div>
             <ProgressBar 
-              value={stats.xp} 
+              value={displayStats.xp} 
               max={currentThreshold.max}
               variant="success"
             />
@@ -220,7 +242,7 @@ export default function Profile() {
           
           {currentThreshold.next && (
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Plus que {currentThreshold.max - stats.xp} XP pour devenir {currentThreshold.next} !
+              Plus que {currentThreshold.max - displayStats.xp} XP pour devenir {currentThreshold.next} !
             </p>
           )}
         </Card>
@@ -229,20 +251,20 @@ export default function Profile() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <StatsCard
             title="Points cette semaine"
-            value={stats.weeklyPoints}
+            value={displayStats.weeklyPoints}
             icon={<Star className="w-5 h-5" />}
             trend="up"
             subtitle="+15 vs semaine dernière"
           />
           <StatsCard
             title="Complétude hebdo"
-            value={`${stats.weeklyCompletion}%`}
+            value={`${displayStats.weeklyCompletion}%`}
             icon={<BarChart className="w-5 h-5" />}
-            trend={stats.weeklyCompletion >= 70 ? 'up' : 'neutral'}
+            trend={displayStats.weeklyCompletion >= 70 ? 'up' : 'neutral'}
             subtitle={
-              stats.weeklyCompletion >= 90 ? 'Sensei !' :
-              stats.weeklyCompletion >= 70 ? 'Maître !' :
-              stats.weeklyCompletion >= 40 ? 'Régulier' : 'Apprenti'
+              displayStats.weeklyCompletion >= 90 ? 'Sensei !' :
+              displayStats.weeklyCompletion >= 70 ? 'Maître !' :
+              displayStats.weeklyCompletion >= 40 ? 'Régulier' : 'Apprenti'
             }
           />
         </div>
@@ -250,13 +272,13 @@ export default function Profile() {
         {/* Statistiques détaillées */}
         <Card className="p-6 animate-fade-in">
           <div className="flex items-center space-x-2 mb-4">
-            <Star className="w-5 h-5 text-primary" />
+            <BarChart className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-bold">Statistiques détaillées</h2>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-muted/20 rounded-lg">
-              <div className="text-2xl font-bold text-primary">{stats.totalPoints}</div>
+              <div className="text-2xl font-bold text-primary">{displayStats.totalPoints}</div>
               <div className="text-sm text-muted-foreground">Points totaux</div>
             </div>
             <div className="text-center p-4 bg-muted/20 rounded-lg">
@@ -268,7 +290,7 @@ export default function Profile() {
               <div className="text-sm text-muted-foreground">Jours d'affilée</div>
             </div>
             <div className="text-center p-4 bg-muted/20 rounded-lg">
-              <div className="text-2xl font-bold text-warning">3</div>
+              <div className="text-2xl font-bold text-warning">{displayStats.badges.filter(b => b.unlocked).length}</div>
               <div className="text-sm text-muted-foreground">Badges débloqués</div>
             </div>
           </div>
@@ -277,15 +299,15 @@ export default function Profile() {
         {/* Badges - déplacé en bas */}
         <Card className="p-6 mb-6 animate-fade-in">
           <div className="flex items-center space-x-2 mb-4">
-            <Award className="w-5 h-5 text-accent" />
+            <Trophy className="w-5 h-5 text-accent" />
             <h2 className="text-xl font-bold">Badges collectés</h2>
             <Badge variant="secondary">
-              {stats.badges.filter(b => b.unlocked).length}/{stats.badges.length}
+              {displayStats.badges.filter(b => b.unlocked).length}/{displayStats.badges.length}
             </Badge>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {stats.badges.map((badge) => (
+            {displayStats.badges.map((badge) => (
               <div
                 key={badge.id}
                 className={`p-4 rounded-lg border transition-smooth ${
