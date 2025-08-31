@@ -211,19 +211,8 @@ export const useUserTasks = () => {
     try {
       const newUserTask = await SupabaseService.addTemplateToToday(user.id, templateId);
       
-      // Formater et ajouter à la liste des tâches
-      const formattedTask: UserTask = {
-        id: newUserTask.id,
-        userId: newUserTask.user_id,
-        templateId: newUserTask.template_id,
-        status: newUserTask.status,
-        lastDoneAt: newUserTask.last_done_at ? new Date(newUserTask.last_done_at) : undefined,
-        nextDueAt: new Date(newUserTask.next_due_at),
-        points: newUserTask.points,
-        isCustom: false
-      };
-
-      setTasks(prev => [...prev, formattedTask]);
+      // Rafraîchir toutes les données pour s'assurer de la synchronisation
+      await loadUserTasks();
       
       toast({
         title: "Tâche ajoutée !",
@@ -244,7 +233,9 @@ export const useUserTasks = () => {
     
     try {
       await SupabaseService.deleteTask(taskId);
-      setTasks(prev => prev.filter(task => task.id !== taskId));
+      
+      // Rafraîchir toutes les données pour s'assurer de la synchronisation
+      await loadUserTasks();
       
       toast({
         title: "Tâche retirée",

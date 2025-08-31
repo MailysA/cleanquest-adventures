@@ -23,6 +23,8 @@ export default function Home() {
     snoozeTask, 
     deleteTask, 
     addCustomTask,
+    addTemplateToToday,
+    removeFromToday,
     canExecuteEarly 
   } = useUserTasks();
   const { user } = useAuth();

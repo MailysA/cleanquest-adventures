@@ -319,7 +319,7 @@ export class SupabaseService {
         title: customTask.title,
         room: customTask.room,
         frequency: 'daily',
-        status: 'due',
+        status: 'pending',
         points: customTask.points,
         duration_min: customTask.durationMin,
         next_due_at: new Date().toISOString()
@@ -363,7 +363,7 @@ export class SupabaseService {
         title: template.title,
         room: template.room,
         frequency: template.frequency,
-        status: 'due',
+        status: 'pending',
         points: template.points,
         duration_min: template.duration_min,
         next_due_at: new Date().toISOString()
