@@ -1,0 +1,273 @@
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { LevelBadge } from "@/components/LevelBadge";
+import { mockUserProfile } from "@/data/mockData";
+import { 
+  Settings as SettingsIcon, 
+  User, 
+  Bell, 
+  RefreshCw, 
+  Mail,
+  Home,
+  Users,
+  PawPrint,
+  Trees
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+export default function Settings() {
+  const [profile, setProfile] = useState(mockUserProfile);
+  const [notifications, setNotifications] = useState({
+    daily: true,
+    weekly: true,
+    achievements: true
+  });
+  const { toast } = useToast();
+
+  const handleProfileUpdate = (field: string, value: any) => {
+    setProfile(prev => ({ ...prev, [field]: value }));
+    toast({
+      title: "Profil mis à jour",
+      description: "Tes préférences ont été sauvegardées !",
+    });
+  };
+
+  const handleResetProgress = () => {
+    toast({
+      title: "Progression réinitialisée",
+      description: "Ton aventure CleanQuest recommence à zéro !",
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header */}
+      <div className="gradient-hero text-primary-foreground p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center space-x-3">
+            <SettingsIcon className="w-8 h-8" />
+            <div>
+              <h1 className="text-2xl font-bold">Paramètres</h1>
+              <p className="opacity-90">Personnalise ton expérience CleanQuest</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto p-6 -mt-6">
+        {/* Profil utilisateur */}
+        <Card className="p-6 mb-6 gradient-card animate-slide-up">
+          <div className="flex items-center space-x-2 mb-4">
+            <User className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold">Mon profil</h2>
+          </div>
+          
+          <div className="space-y-4">
+            {/* Type de logement */}
+            <div>
+              <h3 className="font-medium mb-2 flex items-center space-x-2">
+                <Home className="w-4 h-4" />
+                <span>Type de logement</span>
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'house', label: 'Maison', icon: '🏠' },
+                  { value: 'apartment', label: 'Appartement', icon: '🏢' },
+                  { value: 'student', label: 'Logement étudiant', icon: '🎓' }
+                ].map((option) => (
+                  <Button
+                    key={option.value}
+                    variant={profile.housingType === option.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleProfileUpdate('housingType', option.value)}
+                    className={profile.housingType === option.value ? "gradient-primary" : ""}
+                  >
+                    <span className="mr-1">{option.icon}</span>
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Situation familiale */}
+            <div>
+              <h3 className="font-medium mb-2 flex items-center space-x-2">
+                <Users className="w-4 h-4" />
+                <span>Situation familiale</span>
+              </h3>
+              <div className="flex gap-2">
+                {[
+                  { value: 'single', label: 'Célibataire', icon: '👤' },
+                  { value: 'parent', label: 'Parent', icon: '👨‍👩‍👧' }
+                ].map((option) => (
+                  <Button
+                    key={option.value}
+                    variant={profile.familyStatus === option.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleProfileUpdate('familyStatus', option.value)}
+                    className={profile.familyStatus === option.value ? "gradient-primary" : ""}
+                  >
+                    <span className="mr-1">{option.icon}</span>
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Options avec switch */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <PawPrint className="w-4 h-4" />
+                  <span className="font-medium">Animaux domestiques</span>
+                </div>
+                <Switch
+                  checked={profile.hasPets}
+                  onCheckedChange={(checked) => handleProfileUpdate('hasPets', checked)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <Trees className="w-4 h-4" />
+                  <span className="font-medium">Jardin/Extérieur</span>
+                </div>
+                <Switch
+                  checked={profile.hasGarden}
+                  onCheckedChange={(checked) => handleProfileUpdate('hasGarden', checked)}
+                />
+              </div>
+            </div>
+
+            {/* Niveau actuel */}
+            <div>
+              <h3 className="font-medium mb-2">Niveau actuel</h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'apprenti', label: 'Apprenti' },
+                  { value: 'regulier', label: 'Régulier' },
+                  { value: 'maitre', label: 'Maître' }
+                ].map((level) => (
+                  <Button
+                    key={level.value}
+                    variant={profile.currentLevel === level.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleProfileUpdate('currentLevel', level.value)}
+                    className={profile.currentLevel === level.value ? "gradient-primary" : ""}
+                  >
+                    {level.label}
+                  </Button>
+                ))}
+              </div>
+              <div className="mt-2">
+                <LevelBadge level={profile.currentLevel} />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Notifications */}
+        <Card className="p-6 mb-6 animate-fade-in">
+          <div className="flex items-center space-x-2 mb-4">
+            <Bell className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold">Notifications</h2>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">Rappel quotidien</h3>
+                <p className="text-sm text-muted-foreground">
+                  Notification pour tes tâches du jour
+                </p>
+              </div>
+              <Switch
+                checked={notifications.daily}
+                onCheckedChange={(checked) => 
+                  setNotifications(prev => ({ ...prev, daily: checked }))
+                }
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">Rappel hebdomadaire</h3>
+                <p className="text-sm text-muted-foreground">
+                  Bilan de ta semaine et objectifs
+                </p>
+              </div>
+              <Switch
+                checked={notifications.weekly}
+                onCheckedChange={(checked) => 
+                  setNotifications(prev => ({ ...prev, weekly: checked }))
+                }
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">Succès et badges</h3>
+                <p className="text-sm text-muted-foreground">
+                  Notification lors de nouveaux badges
+                </p>
+              </div>
+              <Switch
+                checked={notifications.achievements}
+                onCheckedChange={(checked) => 
+                  setNotifications(prev => ({ ...prev, achievements: checked }))
+                }
+              />
+            </div>
+          </div>
+        </Card>
+
+        {/* Actions */}
+        <Card className="p-6 mb-6 animate-fade-in">
+          <div className="flex items-center space-x-2 mb-4">
+            <RefreshCw className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold">Actions</h2>
+          </div>
+          
+          <div className="space-y-3">
+            <Button 
+              variant="outline" 
+              onClick={handleResetProgress}
+              className="w-full justify-start text-destructive border-destructive/20 hover:bg-destructive/10"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Réinitialiser ma progression
+            </Button>
+          </div>
+        </Card>
+
+        {/* Support */}
+        <Card className="p-6 animate-fade-in">
+          <div className="flex items-center space-x-2 mb-4">
+            <Mail className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold">Support</h2>
+          </div>
+          
+          <div className="space-y-3">
+            <p className="text-muted-foreground">
+              Besoin d'aide ou une suggestion ? Contacte-nous !
+            </p>
+            <Button variant="outline" className="w-full justify-start">
+              <Mail className="w-4 h-4 mr-2" />
+              Contacter le support
+            </Button>
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="text-center text-sm text-muted-foreground">
+              <p>CleanQuest v1.0</p>
+              <p>Créé avec ❤️ pour rendre le ménage amusant</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
