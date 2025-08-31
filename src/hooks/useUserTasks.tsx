@@ -205,6 +205,61 @@ export const useUserTasks = () => {
     return false;
   };
 
+  const addTemplateToToday = async (templateId: string) => {
+    if (!user) return;
+    
+    try {
+      const newUserTask = await SupabaseService.addTemplateToToday(user.id, templateId);
+      
+      // Formater et ajouter à la liste des tâches
+      const formattedTask: UserTask = {
+        id: newUserTask.id,
+        userId: newUserTask.user_id,
+        templateId: newUserTask.template_id,
+        status: newUserTask.status,
+        lastDoneAt: newUserTask.last_done_at ? new Date(newUserTask.last_done_at) : undefined,
+        nextDueAt: new Date(newUserTask.next_due_at),
+        points: newUserTask.points,
+        isCustom: false
+      };
+
+      setTasks(prev => [...prev, formattedTask]);
+      
+      toast({
+        title: "Tâche ajoutée !",
+        description: "La tâche a été ajoutée à ta journée d'aujourd'hui",
+      });
+    } catch (error) {
+      console.error('Error adding template to today:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter cette tâche",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const removeFromToday = async (taskId: string) => {
+    if (!user) return;
+    
+    try {
+      await SupabaseService.deleteTask(taskId);
+      setTasks(prev => prev.filter(task => task.id !== taskId));
+      
+      toast({
+        title: "Tâche retirée",
+        description: "La tâche a été retirée de ta journée",
+      });
+    } catch (error) {
+      console.error('Error removing task from today:', error);
+      toast({
+        title: "Erreur", 
+        description: "Impossible de retirer cette tâche",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     if (user) {
       loadUserTasks();
@@ -223,6 +278,8 @@ export const useUserTasks = () => {
     snoozeTask,
     deleteTask,
     addCustomTask,
+    addTemplateToToday,
+    removeFromToday,
     canExecuteEarly,
     refreshTasks: loadUserTasks
   };

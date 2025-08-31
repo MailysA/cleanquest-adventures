@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, Pause, Trash2, Zap } from "lucide-react";
+import { CheckCircle, Clock, Pause, Trash2, Zap, Plus, X, Home, ChefHat, Bed, Bath, TreePine, Shirt } from "lucide-react";
 import { TaskTemplate, UserTask } from "@/types/game";
 import { cn } from "@/lib/utils";
 
@@ -12,20 +12,22 @@ interface TaskCardProps {
   onComplete?: () => void;
   onSnooze?: () => void;
   onDelete?: () => void;
+  onAddToToday?: () => void;
+  onRemoveFromToday?: () => void;
   canExecuteEarly?: boolean;
   className?: string;
 }
 
 const getRoomIcon = (room: string) => {
   switch (room) {
-    case 'Cuisine': return '🍽️';
-    case 'Salon': return '🛋️';
-    case 'Salle de bain': return '🚿';
-    case 'WC': return '🚽';
-    case 'Chambre': return '🛏️';
-    case 'Jardin': return '🌳';
-    case 'Buanderie': return '🧺';
-    default: return '🏠';
+    case 'Cuisine': return <ChefHat className="w-6 h-6" />;
+    case 'Salon': return <Home className="w-6 h-6" />;
+    case 'Salle de bain': return <Bath className="w-6 h-6" />;
+    case 'WC': return <Bath className="w-6 h-6" />;
+    case 'Chambre': return <Bed className="w-6 h-6" />;
+    case 'Jardin': return <TreePine className="w-6 h-6" />;
+    case 'Buanderie': return <Shirt className="w-6 h-6" />;
+    default: return <Home className="w-6 h-6" />;
   }
 };
 
@@ -36,6 +38,8 @@ export const TaskCard = ({
   onComplete, 
   onSnooze, 
   onDelete,
+  onAddToToday,
+  onRemoveFromToday,
   canExecuteEarly = false,
   className 
 }: TaskCardProps) => {
@@ -44,6 +48,7 @@ export const TaskCard = ({
   const isCustom = userTask?.isCustom || task.isCustom;
   const displayTitle = userTask?.customTitle || task.title;
   const displayRoom = isCustom ? (userTask as any)?.customRoom || task.room : task.room;
+  const hasUserTask = !!userTask;
 
   return (
     <Card className={cn(
@@ -55,7 +60,7 @@ export const TaskCard = ({
     )}>
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3 flex-1">
-          <div className="text-2xl">{getRoomIcon(displayRoom)}</div>
+          <div className="text-muted-foreground">{getRoomIcon(displayRoom)}</div>
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
               <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">
@@ -63,7 +68,8 @@ export const TaskCard = ({
               </span>
               {isCustom && (
                 <Badge variant="secondary" className="text-xs">
-                  ✨ Personnalisée
+                  <Plus className="w-3 h-3 mr-1" />
+                  Personnalisée
                 </Badge>
               )}
               {canExecuteEarly && status === 'pending' && (
@@ -78,6 +84,7 @@ export const TaskCard = ({
                   {task.frequency === 'weekly' && <span className="text-xs text-info">Hebdo</span>}
                   {task.frequency === 'monthly' && <span className="text-xs text-primary">Mensuel</span>}
                   {task.frequency === 'quarterly' && <span className="text-xs text-success">Trimestriel</span>}
+                  {task.frequency === 'yearly' && <span className="text-xs text-warning">Annuel</span>}
                 </>
               )}
             </div>
@@ -99,7 +106,8 @@ export const TaskCard = ({
           </div>
         </div>
         
-        {status === 'pending' && (
+        {/* Actions pour tâches actives (avec userTask) */}
+        {hasUserTask && status === 'pending' && (
           <div className="flex items-center space-x-2 ml-4">
             {onDelete && (
               <Button 
@@ -116,6 +124,7 @@ export const TaskCard = ({
               variant="outline"
               onClick={onSnooze}
               className="text-warning border-warning/20 hover:bg-warning/10"
+              disabled={!onSnooze}
             >
               <Pause className="w-4 h-4" />
             </Button>
@@ -124,8 +133,41 @@ export const TaskCard = ({
               variant="default"
               onClick={onComplete}
               className="gradient-primary text-primary-foreground hover:opacity-90"
+              disabled={!onComplete}
             >
               <CheckCircle className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Actions pour templates sans userTask */}
+        {!hasUserTask && (
+          <div className="flex items-center space-x-2 ml-4">
+            {onAddToToday && (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={onAddToToday}
+                className="text-primary border-primary/20 hover:bg-primary/10"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1">Ajouter aujourd'hui</span>
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Action pour retirer des tâches d'aujourd'hui */}
+        {hasUserTask && task.frequency !== 'daily' && status === 'pending' && onRemoveFromToday && (
+          <div className="flex items-center space-x-2 ml-4">
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={onRemoveFromToday}
+              className="text-muted-foreground border-border hover:bg-muted/50"
+            >
+              <X className="w-4 h-4" />
+              <span className="hidden sm:inline ml-1">Retirer</span>
             </Button>
           </div>
         )}

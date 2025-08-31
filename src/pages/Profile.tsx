@@ -8,7 +8,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { mockUserStats } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Star, TrendingUp, Award, Camera, Upload, User } from "lucide-react";
+import { Trophy, Star, TrendingUp, Award, Camera, Upload, User, BarChart, Target } from "lucide-react";
 
 export default function Profile() {
   const stats = mockUserStats;
@@ -184,14 +184,14 @@ export default function Profile() {
           <StatsCard
             title="Points cette semaine"
             value={stats.weeklyPoints}
-            icon="⚡"
+            icon={<Star className="w-5 h-5" />}
             trend="up"
             subtitle="+15 vs semaine dernière"
           />
           <StatsCard
             title="Complétude hebdo"
             value={`${stats.weeklyCompletion}%`}
-            icon="📊"
+            icon={<BarChart className="w-5 h-5" />}
             trend={stats.weeklyCompletion >= 70 ? 'up' : 'neutral'}
             subtitle={
               stats.weeklyCompletion >= 90 ? 'Sensei !' :

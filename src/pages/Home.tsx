@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { TaskCard } from "@/components/TaskCard";
 import { StatsCard } from "@/components/StatsCard";
 import { LevelBadge } from "@/components/LevelBadge";
@@ -7,10 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AddCustomTaskDialog } from "@/components/AddCustomTaskDialog";
 import { useUserTasks } from "@/hooks/useUserTasks";
+import { SupabaseService } from "@/services/supabaseService";
+import { useAuth } from "@/contexts/AuthContext";
 import { taskTemplates, mockUserStats } from "@/data/mockData";
-import { Clock, Trophy, Target, Zap, Plus, Pause, Check, Star, BarChart, ClipboardList } from "lucide-react";
+import { Clock, Trophy, Target, Zap, Plus, Pause, Check, Star, BarChart, ClipboardList, User } from "lucide-react";
 
 export default function Home() {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { 
     tasks, 
     templates, 
@@ -21,8 +25,26 @@ export default function Home() {
     addCustomTask,
     canExecuteEarly 
   } = useUserTasks();
+  const { user } = useAuth();
   
   const stats = mockUserStats; // Keep using mock stats for now
+
+  useEffect(() => {
+    loadUserProfile();
+  }, [user]);
+
+  const loadUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const userData = await SupabaseService.getUserData(user.id);
+      if (userData.profile?.avatar_url) {
+        setAvatarUrl(userData.profile.avatar_url);
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
 
   // Get tasks due today or can be executed early
   const todayTasks = tasks
@@ -78,8 +100,16 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 flex items-center justify-center animate-bounce-in">
-                <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 overflow-hidden flex items-center justify-center animate-bounce-in">
+                {avatarUrl ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt="Avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                )}
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold leading-tight">Salut, Champion !</h1>

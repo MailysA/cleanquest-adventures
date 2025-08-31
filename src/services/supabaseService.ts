@@ -316,13 +316,13 @@ export class SupabaseService {
         id: taskId,
         user_id: userId,
         template_id: 'custom',
-        status: 'pending',
-        next_due_at: new Date().toISOString(),
+        title: customTask.title,
+        room: customTask.room,
+        frequency: 'daily',
+        status: 'due',
         points: customTask.points,
-        is_custom: true,
-        custom_title: customTask.title,
-        custom_room: customTask.room,
-        custom_duration: customTask.durationMin
+        duration_min: customTask.durationMin,
+        next_due_at: new Date().toISOString()
       };
 
       const { data, error } = await client
@@ -336,6 +336,50 @@ export class SupabaseService {
       return data;
     } catch (error) {
       console.error('❌ Error adding custom task:', error);
+      throw error;
+    }
+  }
+
+  // Ajouter une tâche template à la journée d'aujourd'hui
+  static async addTemplateToToday(userId: string, templateId: string) {
+    try {
+      const client = checkSupabaseConnection();
+      
+      // D'abord récupérer le template
+      const { data: template, error: templateError } = await client
+        .from('task_templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+
+      if (templateError) throw templateError;
+
+      const taskId = `${userId}_template_${templateId}_${Date.now()}`;
+      
+      const newTask = {
+        id: taskId,
+        user_id: userId,
+        template_id: templateId,
+        title: template.title,
+        room: template.room,
+        frequency: template.frequency,
+        status: 'due',
+        points: template.points,
+        duration_min: template.duration_min,
+        next_due_at: new Date().toISOString()
+      };
+
+      const { data, error } = await client
+        .from('user_tasks')
+        .insert([newTask])
+        .select()
+        .single();
+
+      if (error) throw error;
+      console.log('✅ Template task added to today:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error adding template to today:', error);
       throw error;
     }
   }

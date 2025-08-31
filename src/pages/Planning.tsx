@@ -6,7 +6,7 @@ import { TaskCard } from "@/components/TaskCard";
 import { AddCustomTaskDialog } from "@/components/AddCustomTaskDialog";
 import { useUserTasks } from "@/hooks/useUserTasks";
 import { taskTemplates } from "@/data/mockData";
-import { Calendar, Filter, Clock } from "lucide-react";
+import { Calendar, Filter, Clock, ClipboardList, Star, Search } from "lucide-react";
 
 const frequencies = [
   { value: 'all', label: 'Toutes', color: 'bg-muted' },
@@ -40,6 +40,8 @@ export default function Planning() {
     snoozeTask, 
     deleteTask, 
     addCustomTask,
+    addTemplateToToday,
+    removeFromToday,
     canExecuteEarly 
   } = useUserTasks();
 
@@ -172,7 +174,7 @@ export default function Planning() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card className="p-4 gradient-card">
             <div className="flex items-center space-x-2">
-              <div className="text-2xl">📋</div>
+              <ClipboardList className="w-6 h-6 text-primary" />
               <div>
                 <div className="text-2xl font-bold">{filteredItems.length}</div>
                 <div className="text-sm text-muted-foreground">Tâches</div>
@@ -190,7 +192,7 @@ export default function Planning() {
           </Card>
           <Card className="p-4 gradient-card">
             <div className="flex items-center space-x-2">
-              <div className="text-2xl">⭐</div>
+              <Star className="w-6 h-6 text-warning" />
               <div>
                 <div className="text-2xl font-bold">{totalPoints}</div>
                 <div className="text-sm text-muted-foreground">Points max</div>
@@ -233,6 +235,8 @@ export default function Planning() {
                         onComplete={item.userTask ? () => completeTask(item.userTask.id) : undefined}
                         onSnooze={item.userTask ? () => snoozeTask(item.userTask.id) : undefined}
                         onDelete={item.userTask ? () => deleteTask(item.userTask.id) : undefined}
+                        onAddToToday={!item.userTask ? () => addTemplateToToday(item.task.id) : undefined}
+                        onRemoveFromToday={item.userTask && item.task.frequency !== 'daily' ? () => removeFromToday(item.userTask.id) : undefined}
                         canExecuteEarly={
                           item.userTask && item.task 
                             ? canExecuteEarly(item.userTask, item.task) 
@@ -256,6 +260,8 @@ export default function Planning() {
                 onComplete={item.userTask ? () => completeTask(item.userTask.id) : undefined}
                 onSnooze={item.userTask ? () => snoozeTask(item.userTask.id) : undefined}
                 onDelete={item.userTask ? () => deleteTask(item.userTask.id) : undefined}
+                onAddToToday={!item.userTask ? () => addTemplateToToday(item.task.id) : undefined}
+                onRemoveFromToday={item.userTask && item.task.frequency !== 'daily' ? () => removeFromToday(item.userTask.id) : undefined}
                 canExecuteEarly={
                   item.userTask && item.task 
                     ? canExecuteEarly(item.userTask, item.task) 
@@ -268,7 +274,9 @@ export default function Planning() {
 
         {filteredItems.length === 0 && (
           <Card className="p-8 text-center animate-fade-in">
-            <div className="text-6xl mb-4">🔍</div>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/20 flex items-center justify-center">
+              <Search className="w-8 h-8 text-muted-foreground" />
+            </div>
             <h3 className="text-xl font-semibold mb-2">Aucune tâche trouvée</h3>
             <p className="text-muted-foreground mb-4">
               Essaie de modifier tes filtres ou ajoute une tâche personnalisée.
