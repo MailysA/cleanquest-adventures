@@ -130,16 +130,16 @@ export const AddCustomTaskDialog = ({ onAddTask }: AddCustomTaskDialogProps) => 
                 min="1"
                 max="5"
                 value={points}
-                onChange={(e) => setPoints(Math.min(5, Number(e.target.value)))}
-                className="mt-1"
+                readOnly
+                disabled
+                className="mt-1 bg-muted/50 cursor-not-allowed"
               />
             </div>
           </div>
 
           <div className="bg-muted/20 p-3 rounded-lg">
             <p className="text-sm text-muted-foreground">
-              💡 <strong>Astuce :</strong> Les points sont automatiquement calculés selon la durée (max 5 points), 
-              mais tu peux les ajuster selon la difficulté de la tâche.
+              💡 <strong>Astuce :</strong> Les points sont automatiquement calculés selon la durée (max 5 points).
             </p>
           </div>
 
