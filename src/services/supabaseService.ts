@@ -35,19 +35,15 @@ export class SupabaseService {
   static async createUserProfile(userId: string) {
     try {
       const client = checkSupabaseConnection();
-      const profileForDB: Omit<UserProfileRow, 'created_at' | 'updated_at'> = {
-        id: `profile_${userId}`,
+      const profileForDB = {
         user_id: userId,
-        housing_type: mockUserProfile.housingType,
+        home_type: mockUserProfile.housingType,
         family_status: mockUserProfile.familyStatus,
         has_pets: mockUserProfile.hasPets,
         has_garden: mockUserProfile.hasGarden,
-        current_level: mockUserProfile.currentLevel,
-        total_points: mockUserStats.totalPoints,
-        weekly_points: mockUserStats.weeklyPoints,
+        level_label: mockUserProfile.currentLevel,
         weekly_completion: mockUserStats.weeklyCompletion,
-        xp: mockUserStats.xp,
-        xp_to_next_level: mockUserStats.xpToNextLevel
+        xp: mockUserStats.xp
       };
 
       const { data, error } = await client
@@ -67,19 +63,40 @@ export class SupabaseService {
   static async insertUserTasks(userId: string) {
     try {
       const client = checkSupabaseConnection();
-      const userTasksForDB: Omit<UserTaskRow, 'created_at'>[] = mockUserTasks.map((task, index) => ({
+      
+      // Récupérer le profil utilisateur pour filtrer les templates
+      const { data: profile } = await client
+        .from('user_profiles')
+        .select('has_pets, has_garden')
+        .eq('user_id', userId)
+        .single();
+
+      // Récupérer les templates filtrés selon le profil
+      let templatesQuery = client.from('task_templates').select('*');
+      
+      if (profile) {
+        const conditions = ['condition.eq.none'];
+        if (profile.has_pets) conditions.push('condition.eq.petsOnly');
+        if (profile.has_garden) conditions.push('condition.eq.gardenOnly');
+        templatesQuery = templatesQuery.or(conditions.join(','));
+      }
+
+      const { data: templates, error: templatesError } = await templatesQuery;
+      if (templatesError) throw templatesError;
+
+      // Créer des tâches basées sur les templates
+      const userTasksForDB = templates?.slice(0, 5).map((template, index) => ({
         id: `${userId}_task_${index}`,
         user_id: userId,
-        template_id: task.templateId,
-        status: task.status,
-        last_done_at: task.lastDoneAt?.toISOString(),
-        next_due_at: task.nextDueAt.toISOString(),
-        points: task.points,
-        is_custom: false,
-        custom_title: undefined,
-        custom_room: undefined,
-        custom_duration: undefined
-      }));
+        template_id: template.id,
+        title: template.title,
+        room: template.room,
+        frequency: template.frequency,
+        status: 'due' as const,
+        points: template.points,
+        duration_min: template.duration_min,
+        next_due_at: new Date().toISOString()
+      })) || [];
 
       const { data, error } = await client
         .from('user_tasks')
@@ -98,16 +115,14 @@ export class SupabaseService {
   static async insertUserBadges(userId: string) {
     try {
       const client = checkSupabaseConnection();
-      const badgesForDB: Omit<BadgeRow, 'created_at'>[] = mockBadges.map((badge, index) => ({
+      const badgesForDB = mockBadges.slice(0, 3).map((badge, index) => ({
         id: `${userId}_badge_${index}`,
         user_id: userId,
-        badge_id: badge.id,
-        name: badge.name,
+        badge_code: badge.id,
+        title: badge.name,
         description: badge.description,
-        icon: badge.icon,
-        condition: badge.condition,
-        unlocked: badge.unlocked,
-        unlocked_at: badge.unlocked ? new Date().toISOString() : undefined
+        level: 1,
+        earned_at: badge.unlocked ? new Date().toISOString() : new Date().toISOString()
       }));
 
       const { data, error } = await client
@@ -235,7 +250,7 @@ export class SupabaseService {
   }
 
   // Mettre à jour le statut d'une tâche
-  static async updateTaskStatus(taskId: string, status: 'pending' | 'done' | 'snoozed') {
+  static async updateTaskStatus(taskId: string, status: 'due' | 'done' | 'snoozed') {
     try {
       const client = checkSupabaseConnection();
       const updates: any = { status };
@@ -266,21 +281,17 @@ export class SupabaseService {
       // Récupérer le profil actuel
       const { data: profile, error: fetchError } = await client
         .from('user_profiles')
-        .select('total_points, weekly_points, xp')
+        .select('xp')
         .eq('user_id', userId)
         .single();
 
       if (fetchError) throw fetchError;
 
-      const newTotalPoints = profile.total_points + pointsToAdd;
-      const newWeeklyPoints = profile.weekly_points + pointsToAdd;
       const newXp = profile.xp + pointsToAdd;
 
       const { data, error } = await client
         .from('user_profiles')
         .update({
-          total_points: newTotalPoints,
-          weekly_points: newWeeklyPoints,
           xp: newXp,
           updated_at: new Date().toISOString()
         })
