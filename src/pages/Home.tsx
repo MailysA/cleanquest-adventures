@@ -119,10 +119,13 @@ export default function Home() {
       const template = templates.find(t => t.id === task.templateId);
       if (!template && !task.isCustom) return false;
       
-      // Include custom tasks
+      // Include custom tasks (always available)
       if (task.isCustom) return true;
       
-      // Include tasks due today
+      // Include daily tasks (always available for today)
+      if (template && template.frequency === 'daily') return true;
+      
+      // For other frequencies, check if due today or can be executed early
       const today = new Date();
       const taskDate = new Date(task.nextDueAt);
       const isToday = taskDate.toDateString() === today.toDateString();
