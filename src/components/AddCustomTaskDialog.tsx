@@ -33,7 +33,7 @@ export const AddCustomTaskDialog = ({ onAddTask }: AddCustomTaskDialogProps) => 
   const [title, setTitle] = useState('');
   const [room, setRoom] = useState('');
   const [duration, setDuration] = useState(15);
-  const [points, setPoints] = useState(10);
+  const [points, setPoints] = useState(5);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,14 +51,14 @@ export const AddCustomTaskDialog = ({ onAddTask }: AddCustomTaskDialogProps) => 
     setTitle('');
     setRoom('');
     setDuration(15);
-    setPoints(10);
+    setPoints(5);
     setOpen(false);
   };
 
   const handleDurationChange = (value: number) => {
     setDuration(value);
-    // Auto-calculate points based on duration (rough estimate)
-    const calculatedPoints = Math.max(5, Math.round(value / 3));
+    // Auto-calculate points based on duration (limited to max 5 points)
+    const calculatedPoints = Math.min(5, Math.max(1, Math.round(value / 5)));
     setPoints(calculatedPoints);
   };
 
@@ -128,9 +128,9 @@ export const AddCustomTaskDialog = ({ onAddTask }: AddCustomTaskDialogProps) => 
                 id="points"
                 type="number"
                 min="1"
-                max="50"
+                max="5"
                 value={points}
-                onChange={(e) => setPoints(Number(e.target.value))}
+                onChange={(e) => setPoints(Math.min(5, Number(e.target.value)))}
                 className="mt-1"
               />
             </div>
@@ -138,7 +138,7 @@ export const AddCustomTaskDialog = ({ onAddTask }: AddCustomTaskDialogProps) => 
 
           <div className="bg-muted/20 p-3 rounded-lg">
             <p className="text-sm text-muted-foreground">
-              💡 <strong>Astuce :</strong> Les points sont automatiquement calculés selon la durée, 
+              💡 <strong>Astuce :</strong> Les points sont automatiquement calculés selon la durée (max 5 points), 
               mais tu peux les ajuster selon la difficulté de la tâche.
             </p>
           </div>
