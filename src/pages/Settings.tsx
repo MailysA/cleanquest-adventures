@@ -43,12 +43,16 @@ export default function Settings() {
       setLoading(true);
       const userData = await SupabaseService.getUserData(user.id);
       if (userData.profile) {
+        // Calculer aussi les stats pour avoir le niveau basé sur l'XP
+        const userStats = await SupabaseService.getUserStats(user.id);
+        
         setProfile({
           housingType: userData.profile.home_type || 'apartment',
           familyStatus: userData.profile.family_status || 'single', 
           hasPets: userData.profile.has_pets || false,
           hasGarden: userData.profile.has_garden || false,
-          currentLevel: userData.profile.level_label || 'apprenti'
+          currentLevel: userStats.currentLevel || 'apprenti',
+          xp: userStats.xp || 0
         });
       }
     } catch (error) {
@@ -93,8 +97,9 @@ export default function Settings() {
           updates.has_garden = value;
           break;
         case 'currentLevel':
-          updates.level_label = value;
-          break;
+          // Ne plus permettre de changer le niveau manuellement
+          // updates.level_label = value;
+          return; // Sortir de la fonction sans faire d'update
       }
 
       await SupabaseService.updateUserProfile(user.id, updates);
@@ -246,28 +251,14 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Niveau actuel */}
+            {/* Niveau calculé automatiquement */}
             <div>
-              <h3 className="font-medium mb-2 text-sm sm:text-base">Niveau actuel</h3>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: 'apprenti', label: 'Apprenti' },
-                  { value: 'regulier', label: 'Régulier' },
-                  { value: 'maitre', label: 'Maître' }
-                ].map((level) => (
-                  <Button
-                    key={level.value}
-                    variant={profile.currentLevel === level.value ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleProfileUpdate('currentLevel', level.value)}
-                    className={`${profile.currentLevel === level.value ? "gradient-primary" : ""} min-h-[40px] text-xs sm:text-sm`}
-                  >
-                    {level.label}
-                  </Button>
-                ))}
-              </div>
-              <div className="mt-4">
+              <h3 className="font-medium mb-2 text-sm sm:text-base">Niveau actuel (basé sur l'XP)</h3>
+              <div className="flex items-center space-x-3">
                 <LevelBadge level={profile.currentLevel} />
+                <div className="text-sm text-muted-foreground">
+                  Basé sur tes {profile.xp || 0} points d'expérience
+                </div>
               </div>
             </div>
           </div>

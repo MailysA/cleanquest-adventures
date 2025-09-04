@@ -159,17 +159,9 @@ export default function Profile() {
   };
 
   const levelThresholds = {
-    Apprenti: { min: 0, max: 100, next: 'Novice' },
-    Novice: { min: 100, max: 300, next: 'Adepte' },
-    Adepte: { min: 300, max: 600, next: 'Expert' },
-    Expert: { min: 600, max: 1000, next: 'Maître' },
-    Maître: { min: 1000, max: 1500, next: 'Légende' },
-    Légende: { min: 1500, max: 1500, next: null },
-    // Fallback for old level names
-    apprenti: { min: 0, max: 100, next: 'Novice' },
-    regulier: { min: 100, max: 300, next: 'Adepte' },
-    maitre: { min: 300, max: 600, next: 'Expert' },
-    sensei: { min: 600, max: 1000, next: 'Maître' }
+    apprenti: { min: 0, max: 200, next: 'regulier' },
+    regulier: { min: 200, max: 600, next: 'maitre' },
+    maitre: { min: 600, max: 1000, next: null }
   };
 
   // Utiliser les données fictives si les vraies stats ne sont pas encore chargées
@@ -267,7 +259,7 @@ export default function Profile() {
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs sm:text-sm text-muted-foreground">
-                {currentThreshold.next ? `Vers ${currentThreshold.next}` : 'Niveau maximum atteint !'}
+                {currentThreshold.next ? `Vers ${currentThreshold.next === 'regulier' ? 'Régulier' : currentThreshold.next === 'maitre' ? 'Maître' : currentThreshold.next}` : 'Niveau maximum atteint !'}
               </span>
               <span className="text-xs sm:text-sm font-medium">
                 {displayStats.xp} / {currentThreshold.max} XP
@@ -282,7 +274,7 @@ export default function Profile() {
           
           {currentThreshold.next && (
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Plus que {currentThreshold.max - displayStats.xp} XP pour devenir {currentThreshold.next} !
+              Plus que {currentThreshold.max - displayStats.xp} XP pour devenir {currentThreshold.next === 'regulier' ? 'Régulier' : currentThreshold.next === 'maitre' ? 'Maître' : currentThreshold.next} !
             </p>
           )}
         </Card>

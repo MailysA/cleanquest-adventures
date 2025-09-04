@@ -720,22 +720,15 @@ export class SupabaseService {
 
   // Calculer le niveau basé sur l'XP
   private static calculateLevel(xp: number): string {
-    if (xp < 100) return 'Apprenti';
-    if (xp < 300) return 'Novice';
-    if (xp < 600) return 'Adepte';
-    if (xp < 1000) return 'Expert';
-    if (xp < 1500) return 'Maître';
-    return 'Légende';
+    if (xp < 200) return 'apprenti';
+    if (xp < 600) return 'regulier';
+    return 'maitre';
   }
 
   // Calculer l'XP nécessaire pour le prochain niveau
   private static getXpToNextLevel(currentXp: number): number {
-    const levels = [100, 300, 600, 1000, 1500];
-    for (const levelXp of levels) {
-      if (currentXp < levelXp) {
-        return levelXp - currentXp;
-      }
-    }
+    if (currentXp < 200) return 200 - currentXp;
+    if (currentXp < 600) return 600 - currentXp;
     return 0; // Max level atteint
   }
 
