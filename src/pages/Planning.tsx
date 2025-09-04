@@ -70,8 +70,8 @@ export default function Planning() {
       .map(template => ({ task: template, userTask: null }))
   ];
   
-  // Séparer les tâches par status pour l'affichage
-  const dueTasks = allTasks.filter(item => !item.userTask || item.userTask.status === 'due');
+  // Séparer les tâches par status pour l'affichage (en excluant les tâches supprimées)
+  const dueTasks = allTasks.filter(item => (!item.userTask || item.userTask.status === 'due') && item.userTask?.status !== 'deleted');
   const snoozedTasks = allTasks.filter(item => item.userTask && item.userTask.status === 'snoozed');
   const doneTasks = allTasks.filter(item => item.userTask && item.userTask.status === 'done');
   

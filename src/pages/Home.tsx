@@ -9,28 +9,34 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AddCustomTaskDialog } from "@/components/AddCustomTaskDialog";
+import { KungFuWisdom } from "@/components/KungFuWisdom";
 import { useUserTasks } from "@/hooks/useUserTasks";
+import { useLevelUpNotification } from "@/components/LevelUpNotification";
 import { SupabaseService } from "@/services/supabaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { taskTemplates, mockUserStats } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
+import { LevelSystem } from "@/lib/levelSystem";
 import { Clock, Trophy, Target, Zap, Plus, Pause, Check, Star, BarChart, ClipboardList, User } from "lucide-react";
 
 export default function Home() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [stats, setStats] = useState<any>(null);
-  const { 
-    tasks, 
-    templates, 
-    loading, 
-    completeTask, 
-    snoozeTask, 
-    deleteTask, 
+  const { showLevelUp, LevelUpComponent } = useLevelUpNotification();
+
+  const {
+    tasks,
+    templates,
+    loading,
+    currentUserXP,
+    completeTask,
+    snoozeTask,
+    deleteTask,
     addCustomTask,
     addTemplateToToday,
     removeFromToday,
-    canExecuteEarly 
-  } = useUserTasks();
+    canExecuteEarly
+  } = useUserTasks(showLevelUp);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -78,21 +84,26 @@ export default function Home() {
 
   const loadUserProfile = async () => {
     if (!user) return;
-    
+
     try {
       const userData = await SupabaseService.getUserData(user.id);
       if (userData.profile?.avatar_url) {
         setAvatarUrl(userData.profile.avatar_url);
       }
-      
+
       // Charger aussi les statistiques utilisateur
       const userStats = await SupabaseService.getUserStats(user.id);
-      
+
       // Utiliser le niveau du profil utilisateur (settings) plutôt que celui calculé
       if (userData.profile?.level_label) {
         userStats.currentLevel = userData.profile.level_label;
       }
-      
+
+      // Ajouter le nom d'affichage de l'utilisateur
+      if (userData.profile?.display_name) {
+        userStats.displayName = userData.profile.display_name;
+      }
+
       setStats(userStats);
     } catch (error) {
       console.error('Error loading user profile:', error);
@@ -118,41 +129,47 @@ export default function Home() {
   const todayTasks = tasks
     .filter(task => {
       console.log('Home: Filtering task:', task);
-      
+
+      // Exclude deleted tasks
+      if (task.status === 'deleted') {
+        console.log('Home: Excluding deleted task:', task.id);
+        return false;
+      }
+
       const template = templates.find(t => t.id === task.templateId);
       if (!template && !task.isCustom) {
         console.log('Home: No template found and not custom:', task.templateId);
         return false;
       }
-      
+
       // Include custom tasks that are due
       if (task.isCustom && task.status === 'due') {
         console.log('Home: Including custom task:', task.customTitle);
         return true;
       }
-      
+
       // Include daily tasks that are due (should appear every day)
       if (template && template.frequency === 'daily' && task.status === 'due') {
         console.log('Home: Including daily task:', template.title);
         return true;
       }
-      
+
       // For non-daily tasks, only include if status is due
       if (task.status !== 'due') {
         console.log('Home: Task status not due:', task.status);
         return false;
       }
-      
+
       // For other frequencies, check if due today or can be executed early
       const today = new Date();
       const taskDate = new Date(task.nextDueAt);
       const isToday = taskDate.toDateString() === today.toDateString();
-      
+
       // Include tasks that can be executed early
       const earlyExecution = template ? canExecuteEarly(task, template) : false;
-      
+
       console.log('Home: Task check - isToday:', isToday, 'earlyExecution:', earlyExecution, 'frequency:', template?.frequency);
-      
+
       return isToday || earlyExecution;
     })
     .slice(0, 8); // Limit to 8 tasks for better UX
@@ -174,6 +191,13 @@ export default function Home() {
 
   // Utiliser les données fictives si les vraies stats ne sont pas encore chargées
   const displayStats = stats || mockUserStats;
+
+  // Calculer le niveau actuel et la progression avec le nouveau système
+  const currentLevel = LevelSystem.calculateLevel(currentUserXP || displayStats.xp);
+  const levelConfig = LevelSystem.getLevelConfig(currentLevel);
+  const levelProgress = LevelSystem.getLevelProgress(currentUserXP || displayStats.xp);
+  const xpToNext = LevelSystem.getXpToNextLevel(currentUserXP || displayStats.xp);
+  const character = LevelSystem.getCharacter(currentLevel);
 
   if (loading) {
     return (
@@ -205,8 +229,10 @@ export default function Home() {
                 )}
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold leading-tight text-white">Salut !</h1>
-                <LevelBadge level={displayStats.currentLevel} className="mt-1" />
+                <h1 className="text-xl sm:text-2xl font-bold leading-tight text-white">
+                  Salut {displayStats.displayName || user?.email?.split('@')[0] || ''} !
+                </h1>
+                <LevelBadge level={currentLevel} className="mt-1" showCharacterName={false} />
               </div>
             </div>
             <div className="text-right">
@@ -215,18 +241,27 @@ export default function Home() {
             </div>
           </div>
 
-          {/* XP Progress */}
+          {/* XP Progress avec nouveau système */}
           <div className="bg-white/10 rounded-lg p-3 sm:p-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs sm:text-sm opacity-90">Progression XP</span>
-              <span className="text-xs sm:text-sm opacity-90">{displayStats.xp}/{displayStats.xp + displayStats.xpToNextLevel} XP</span>
+              <span className="text-xs sm:text-sm opacity-90">
+                {levelConfig?.nextLevel ? `Vers ${LevelSystem.getLevelConfig(levelConfig.nextLevel)?.name}` : 'Niveau max atteint !'}
+              </span>
+              <span className="text-xs sm:text-sm opacity-90">
+                {LevelSystem.formatXP(currentUserXP || displayStats.xp)} / {LevelSystem.formatXP(levelConfig?.maxXP || 0)} XP
+              </span>
             </div>
-            <ProgressBar 
-              value={displayStats.xp} 
-              max={displayStats.xp + displayStats.xpToNextLevel}
+            <ProgressBar
+              value={levelProgress}
+              max={100}
               className="bg-white/20"
               variant="default"
             />
+            {xpToNext > 0 && (
+              <div className="text-xs opacity-75 mt-1">
+                Plus que {LevelSystem.formatXP(xpToNext)} XP !
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -386,60 +421,41 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Astuces et conseils - Scroll horizontal */}
+        {/* Sagesse kung fu et conseils */}
         <div className="mb-6">
           <div className="flex items-center mb-4">
             <h2 className="text-xl font-bold flex items-center space-x-2">
               <Star className="w-5 h-5 text-accent" />
-              <span>Astuces du jour</span>
+              <span>Sagesse du Dojo</span>
             </h2>
           </div>
-          
+
           {/* Version mobile - Stack vertical */}
           <div className="md:hidden space-y-4">
+            <KungFuWisdom variant="daily" />
             <TipsCard />
-            <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-              <div className="flex items-center space-x-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                  <Check className="w-4 h-4 text-white" />
-                </div>
-                <h3 className="font-semibold text-green-800">Conseil du jour</h3>
-              </div>
-              <p className="text-green-700 text-sm leading-relaxed">
-                Commence par les tâches les plus importantes le matin. 
-                Tu auras plus d'énergie et tu te sentiras accompli pour le reste de la journée !
-              </p>
-            </Card>
           </div>
-          
+
           {/* Version desktop - Scroll horizontal */}
           <div className="hidden md:block overflow-x-auto pb-4 -mx-4 px-4 scroll-snap-x">
             <div className="flex space-x-4 min-w-max">
+              <div className="w-80 flex-shrink-0 scroll-snap-start">
+                <KungFuWisdom variant="daily" />
+              </div>
               <div className="w-80 flex-shrink-0 scroll-snap-start">
                 <TipsCard />
               </div>
               <div className="w-80 flex-shrink-0 scroll-snap-start">
                 <InfoCard />
               </div>
-              <div className="w-80 flex-shrink-0 scroll-snap-start">
-                <Card className="p-4 h-full bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-green-800">Conseil du jour</h3>
-                  </div>
-                  <p className="text-green-700 text-sm leading-relaxed line-clamp-4">
-                    Commence par les tâches les plus importantes le matin. 
-                    Tu auras plus d'énergie et tu te sentiras accompli pour le reste de la journée !
-                  </p>
-                </Card>
-              </div>
             </div>
           </div>
         </div>
 
       </div>
+
+      {/* Level Up Notification */}
+      {LevelUpComponent}
     </div>
   );
 }

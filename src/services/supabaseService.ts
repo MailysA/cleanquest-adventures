@@ -718,18 +718,20 @@ export class SupabaseService {
     }
   }
 
-  // Calculer le niveau basé sur l'XP
+  // Calculer le niveau basé sur l'XP (utilise le nouveau système)
   private static calculateLevel(xp: number): string {
     if (xp < 200) return 'apprenti';
     if (xp < 600) return 'regulier';
-    return 'maitre';
+    if (xp < 1200) return 'maitre';
+    return 'legende';
   }
 
   // Calculer l'XP nécessaire pour le prochain niveau
   private static getXpToNextLevel(currentXp: number): number {
     if (currentXp < 200) return 200 - currentXp;
     if (currentXp < 600) return 600 - currentXp;
-    return 0; // Max level atteint
+    if (currentXp < 1200) return 1200 - currentXp;
+    return 0; // Niveau maximum atteint
   }
 
   // Récupérer les astuces depuis la base avec rotation tous les 5 jours

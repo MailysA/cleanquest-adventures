@@ -5,12 +5,14 @@ import { supabase } from '@/lib/supabase';
 import { taskTemplates } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { LevelSystem } from '@/lib/levelSystem';
 
-export const useUserTasks = () => {
+export const useUserTasks = (onLevelUp?: (newLevel: string, oldLevel: string) => void) => {
   const [tasks, setTasks] = useState<UserTask[]>([]);
   const [templates, setTemplates] = useState<TaskTemplate[]>(taskTemplates);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserXP, setCurrentUserXP] = useState<number>(0);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -25,19 +27,26 @@ export const useUserTasks = () => {
       setLoading(true);
 
       const userData = await SupabaseService.getUserData(user.id);
-      
+
+      // Charger l'XP de l'utilisateur
+      if (userData.profile?.xp !== undefined) {
+        setCurrentUserXP(userData.profile.xp);
+      }
+
       if (userData.tasks) {
-        const formattedTasks: UserTask[] = userData.tasks.map((task: any) => ({
-          id: task.id,
-          userId: task.user_id,
-          templateId: task.template_id,
-          status: task.status,
-          lastDoneAt: task.last_done_at ? new Date(task.last_done_at) : undefined,
-          nextDueAt: new Date(task.next_due_at),
-          points: task.points,
-          isCustom: task.is_custom || false,
-          customTitle: task.custom_title
-        }));
+        const formattedTasks: UserTask[] = userData.tasks
+          .filter((task: any) => task.status !== 'deleted') // Exclude deleted tasks
+          .map((task: any) => ({
+            id: task.id,
+            userId: task.user_id,
+            templateId: task.template_id,
+            status: task.status,
+            lastDoneAt: task.last_done_at ? new Date(task.last_done_at) : undefined,
+            nextDueAt: new Date(task.next_due_at),
+            points: task.points,
+            isCustom: task.is_custom || false,
+            customTitle: task.custom_title
+          }));
         setTasks(formattedTasks);
       }
 
@@ -72,37 +81,62 @@ export const useUserTasks = () => {
     if (!user) return;
 
     try {
-      await SupabaseService.updateTaskStatus(taskId, 'done');
-      
       const task = tasks.find(t => t.id === taskId);
       const template = templates.find(t => t.id === task?.templateId);
-      
-      if (task && template) {
-        // Vérifier si c'est une exécution anticipée
-        const isEarlyExecution = canExecuteEarly(task, template);
-        const basePoints = template.points;
-        const bonusPoints = isEarlyExecution ? 2 : 0;
-        const totalPoints = basePoints + bonusPoints;
-        
-        await SupabaseService.updateUserPoints(user.id, totalPoints);
-        
-        setTasks(prev => prev.map(t => 
-          t.id === taskId 
-            ? { ...t, status: 'done' as const, lastDoneAt: new Date() }
-            : t
-        ));
 
-        if (isEarlyExecution) {
-          toast({
-            title: "Tâche anticipée terminée ! 🚀",
-            description: `+${basePoints} points + 2 points bonus = ${totalPoints} points gagnés`,
-          });
-        } else {
-          toast({
-            title: "Tâche terminée ! 🎉",
-            description: `+${totalPoints} points gagnés`,
-          });
+      if (!task || !template) return;
+
+      // Calculer les points et bonus
+      const isEarlyExecution = canExecuteEarly(task, template);
+      const basePoints = template.points;
+      const bonusPoints = isEarlyExecution ? 2 : 0;
+
+      // Obtenir le niveau actuel de l'utilisateur
+      const currentLevel = LevelSystem.calculateLevel(currentUserXP);
+      const levelBonus = LevelSystem.getLevelBonus(currentLevel);
+
+      const totalPoints = basePoints + bonusPoints + levelBonus;
+      const newXP = currentUserXP + totalPoints;
+
+      // Vérifier s'il y a un level up
+      const levelUpResult = LevelSystem.checkLevelUp(currentUserXP, newXP);
+
+      // Mettre à jour la base de données
+      await SupabaseService.updateTaskStatus(taskId, 'done');
+      await SupabaseService.updateUserPoints(user.id, totalPoints);
+
+      // Mettre à jour l'état local
+      setTasks(prev => prev.map(t =>
+        t.id === taskId
+          ? { ...t, status: 'done' as const, lastDoneAt: new Date() }
+          : t
+      ));
+
+      setCurrentUserXP(newXP);
+
+      // Afficher le toast approprié avec thème kung fu
+      if (levelUpResult && onLevelUp) {
+        onLevelUp(levelUpResult, currentLevel);
+        toast({
+          title: "🐉 KUNG FU ÉVOLUÉ ! 🐉",
+          description: `Tu es maintenant ${LevelSystem.getLevelConfig(levelUpResult)?.name} ! +${totalPoints} chi`,
+        });
+      } else if (isEarlyExecution) {
+        toast({
+          title: "Technique anticipée maîtrisée ! 🥋",
+          description: `+${basePoints} chi + ${bonusPoints} bonus + ${levelBonus} pouvoir = ${totalPoints} chi`,
+        });
+      } else {
+        let description = `+${basePoints} chi`;
+        if (levelBonus > 0) {
+          description += ` + ${levelBonus} pouvoir martial`;
         }
+        description += ` = ${totalPoints} chi total`;
+
+        toast({
+          title: "Technique maîtrisée ! 🥋",
+          description,
+        });
       }
     } catch (error: any) {
       console.error('Error completing task:', error);
@@ -125,8 +159,8 @@ export const useUserTasks = () => {
       ));
 
       toast({
-        title: "Tâche reportée ⏸️",
-        description: "Tu pourras la faire plus tard !",
+        title: "Technique reportée ⏸️",
+        description: "Tu t'entraîneras plus tard, maître !",
       });
     } catch (error: any) {
       console.error('Error snoozing task:', error);
@@ -140,17 +174,13 @@ export const useUserTasks = () => {
 
   const deleteTask = async (taskId: string) => {
     try {
-      await SupabaseService.updateTaskStatus(taskId, 'deleted');
-      
-      setTasks(prev => prev.map(t => 
-        t.id === taskId 
-          ? { ...t, status: 'deleted' as const }
-          : t
-      ));
+      await SupabaseService.deleteTask(taskId);
+
+      setTasks(prev => prev.filter(t => t.id !== taskId));
 
       toast({
-        title: "Tâche supprimée",
-        description: "Cette tâche ne t'embêtera plus !",
+        title: "Technique abandonnée",
+        description: "Cette technique ne fait plus partie de ton entraînement !",
       });
     } catch (error: any) {
       console.error('Error deleting task:', error);
@@ -176,8 +206,8 @@ export const useUserTasks = () => {
       if (newTask) {
         // No need to update local state, real-time will handle it
         toast({
-          title: "Tâche ajoutée ! ✨",
-          description: `"${customTask.title}" a été ajoutée à tes missions`,
+          title: "Nouvelle technique créée ! ✨",
+          description: `"${customTask.title}" a été ajoutée à ton entraînement`,
         });
       }
     } catch (error: any) {
@@ -311,6 +341,7 @@ export const useUserTasks = () => {
     templates,
     loading,
     error,
+    currentUserXP,
     completeTask,
     snoozeTask,
     deleteTask,

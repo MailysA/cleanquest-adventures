@@ -7,6 +7,7 @@ import { LevelBadge } from "@/components/LevelBadge";
 import { GoogleCalendarSync } from "@/components/GoogleCalendarSync";
 import { useAuth } from "@/contexts/AuthContext";
 import { SupabaseService } from "@/services/supabaseService";
+import { LevelSystem } from "@/lib/levelSystem";
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -43,16 +44,17 @@ export default function Settings() {
       setLoading(true);
       const userData = await SupabaseService.getUserData(user.id);
       if (userData.profile) {
-        // Calculer aussi les stats pour avoir le niveau basé sur l'XP
-        const userStats = await SupabaseService.getUserStats(user.id);
-        
+        // Calculer le niveau avec le nouveau système
+        const xp = userData.profile.xp || 0;
+        const currentLevel = LevelSystem.calculateLevel(xp);
+
         setProfile({
           housingType: userData.profile.home_type || 'apartment',
-          familyStatus: userData.profile.family_status || 'single', 
+          familyStatus: userData.profile.family_status || 'single',
           hasPets: userData.profile.has_pets || false,
           hasGarden: userData.profile.has_garden || false,
-          currentLevel: userStats.currentLevel || 'apprenti',
-          xp: userStats.xp || 0
+          currentLevel: currentLevel,
+          xp: xp
         });
       }
     } catch (error) {

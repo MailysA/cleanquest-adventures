@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/StatsCard";
 import { LevelBadge } from "@/components/LevelBadge";
+import { CharacterGallery } from "@/components/CharacterCard";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { mockUserStats } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { SupabaseService } from "@/services/supabaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { LevelSystem } from "@/lib/levelSystem";
 import { Trophy, Star, TrendingUp, Award, Camera, Upload, User, BarChart, Target } from "lucide-react";
 
 export default function Profile() {
@@ -158,17 +160,20 @@ export default function Profile() {
     }
   };
 
-  const levelThresholds = {
-    apprenti: { min: 0, max: 200, next: 'regulier' },
-    regulier: { min: 200, max: 600, next: 'maitre' },
-    maitre: { min: 600, max: 1000, next: null }
-  };
+  // Nouveau système de niveaux unifié
 
   // Utiliser les données fictives si les vraies stats ne sont pas encore chargées
   const displayStats = stats || mockUserStats;
-  
+
+  // Calculer le niveau et la progression avec le nouveau système
+  const currentLevel = LevelSystem.calculateLevel(displayStats.xp);
+  const levelConfig = LevelSystem.getLevelConfig(currentLevel);
+  const character = LevelSystem.getCharacter(currentLevel);
+  const levelProgress = LevelSystem.getLevelProgress(displayStats.xp);
+  const xpToNext = LevelSystem.getXpToNextLevel(displayStats.xp);
+
   console.log('Profile: Render - isLoading:', isLoading, 'stats:', stats, 'user:', user);
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background pb-20">
@@ -181,12 +186,10 @@ export default function Profile() {
       </div>
     );
   }
-  
-  const currentThreshold = levelThresholds[displayStats.currentLevel];
-  
+
   // Fallback si le niveau n'existe pas
-  if (!currentThreshold) {
-    console.warn(`Level "${displayStats.currentLevel}" not found in levelThresholds`);
+  if (!levelConfig || !character) {
+    console.warn(`Level "${currentLevel}" not found in levelSystem`);
     return (
       <div className="min-h-screen bg-background pb-20">
         <div className="gradient-hero text-primary-foreground p-4 sm:p-6">
@@ -197,10 +200,6 @@ export default function Profile() {
       </div>
     );
   }
-  
-  const progressToNext = currentThreshold.next 
-    ? ((displayStats.xp - currentThreshold.min) / (currentThreshold.max - currentThreshold.min)) * 100
-    : 100;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -242,9 +241,16 @@ export default function Profile() {
             />
           </div>
           
-          <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight">Ton Profil CleanQuest</h1>
-          <LevelBadge level={displayStats.currentLevel} className="mb-4" />
-          <div className="text-base sm:text-lg font-semibold">{displayStats.totalPoints} points au total</div>
+          <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight">
+            Ton Profil CleanQuest
+          </h1>
+          <LevelBadge level={currentLevel} className="mb-4" showCharacterName={false} size="lg" />
+          <div className="text-base sm:text-lg font-semibold">
+            {LevelSystem.formatXP(displayStats.totalPoints)} points au total
+          </div>
+          <div className="text-sm opacity-90 mt-1">
+            "{character.catchPhrase.replace(/"/g, '')}"
+          </div>
         </div>
       </div>
 
@@ -254,28 +260,45 @@ export default function Profile() {
           <div className="flex items-center space-x-2 mb-4">
             <TrendingUp className="w-5 h-5 text-primary" />
             <h2 className="text-lg sm:text-xl font-bold">Progression XP</h2>
+            <Badge variant="secondary" className="text-xs">
+              Niveau {levelConfig.id}
+            </Badge>
           </div>
-          
+
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs sm:text-sm text-muted-foreground">
-                {currentThreshold.next ? `Vers ${currentThreshold.next === 'regulier' ? 'Régulier' : currentThreshold.next === 'maitre' ? 'Maître' : currentThreshold.next}` : 'Niveau maximum atteint !'}
+                {levelConfig.nextLevel ? `Vers ${LevelSystem.getLevelConfig(levelConfig.nextLevel)?.name}` : 'Niveau maximum atteint !'}
               </span>
               <span className="text-xs sm:text-sm font-medium">
-                {displayStats.xp} / {currentThreshold.max} XP
+                {LevelSystem.formatXP(displayStats.xp)} / {LevelSystem.formatXP(levelConfig.maxXP)} XP
               </span>
             </div>
-            <ProgressBar 
-              value={displayStats.xp} 
-              max={currentThreshold.max}
+            <ProgressBar
+              value={levelProgress}
+              max={100}
               variant="success"
             />
           </div>
-          
-          {currentThreshold.next && (
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Plus que {currentThreshold.max - displayStats.xp} XP pour devenir {currentThreshold.next === 'regulier' ? 'Régulier' : currentThreshold.next === 'maitre' ? 'Maître' : currentThreshold.next} !
-            </p>
+
+          {xpToNext > 0 && (
+            <div className="flex items-center justify-between">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Plus que {LevelSystem.formatXP(xpToNext)} XP pour le prochain niveau !
+              </p>
+              <div className="text-xs text-primary font-medium">
+                +{LevelSystem.getLevelBonus(currentLevel)} bonus par tâche
+              </div>
+            </div>
+          )}
+
+          {xpToNext === 0 && (
+            <div className="text-center p-3 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg border border-amber-200">
+              <span className="text-lg">🏆</span>
+              <p className="text-sm font-medium text-amber-800">
+                Niveau maximum atteint ! Tu es une légende !
+              </p>
+            </div>
           )}
         </Card>
 
@@ -328,11 +351,19 @@ export default function Profile() {
           </div>
         </Card>
 
+        {/* Galerie des personnages */}
+        <Card className="p-6 mb-6 animate-fade-in">
+          <CharacterGallery
+            currentLevel={currentLevel}
+            currentXP={displayStats.xp}
+          />
+        </Card>
+
         {/* Badges - déplacé en bas */}
         <Card className="p-6 mb-6 animate-fade-in">
           <div className="flex items-center space-x-2 mb-4">
             <Trophy className="w-5 h-5 text-accent" />
-            <h2 className="text-xl font-bold">Badges collectés</h2>
+            <h2 className="text-xl font-bold">Médailles d'Honneur</h2>
             <Badge variant="secondary">
               {displayStats.badges.filter(b => b.unlocked).length}/{displayStats.badges.length}
             </Badge>
