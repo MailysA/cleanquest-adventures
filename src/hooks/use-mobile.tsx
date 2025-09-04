@@ -75,16 +75,16 @@ export function useHaptics() {
     try {
       // Check if Haptics plugin is available (Capacitor)
       if ('Haptics' in window) {
-        const { Haptics } = await import('@capacitor/haptics');
+        const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
         switch (type) {
           case 'light':
-            await Haptics.impact({ style: 'light' });
+            await Haptics.impact({ style: ImpactStyle.Light });
             break;
           case 'medium':
-            await Haptics.impact({ style: 'medium' });
+            await Haptics.impact({ style: ImpactStyle.Medium });
             break;
           case 'heavy':
-            await Haptics.impact({ style: 'heavy' });
+            await Haptics.impact({ style: ImpactStyle.Heavy });
             break;
         }
       } else if ('vibrate' in navigator) {

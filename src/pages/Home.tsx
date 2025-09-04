@@ -396,7 +396,6 @@ export default function Home() {
           {/* Version mobile - Stack vertical */}
           <div className="md:hidden space-y-4">
             <TipsCard />
-            <InfoCard />
             <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
               <div className="flex items-center space-x-2 mb-3">
                 <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
@@ -438,11 +437,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Encarts informatifs - Version desktop */}
-        <div className="hidden md:grid md:grid-cols-2 gap-4 mb-6">
-          <InfoCard />
-          <TipsCard />
-        </div>
       </div>
     </div>
   );
