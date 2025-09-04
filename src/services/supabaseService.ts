@@ -231,6 +231,19 @@ export class SupabaseService {
         templatesQuery
       ]);
 
+      // Générer les tâches quotidiennes manquantes pour aujourd'hui
+      if (templatesResult.data) {
+        await this.generateMissingDailyTasks(userId, templatesResult.data, tasksResult.data || []);
+        
+        // Recharger les tâches après génération
+        const { data: updatedTasks } = await client
+          .from('user_tasks')
+          .select('*')
+          .eq('user_id', userId);
+          
+        tasksResult.data = updatedTasks;
+      }
+
       return {
         profile: profile,
         tasks: tasksResult.data,
@@ -249,10 +262,86 @@ export class SupabaseService {
     }
   }
 
+  // Générer les tâches quotidiennes manquantes pour aujourd'hui
+  static async generateMissingDailyTasks(userId: string, templates: any[], existingTasks: any[]) {
+    try {
+      const client = checkSupabaseConnection();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // Identifier les templates quotidiens
+      const dailyTemplates = templates.filter(template => template.frequency === 'daily');
+      
+      // Pour chaque template quotidien, vérifier s'il existe une tâche disponible pour aujourd'hui
+      const tasksToCreate = [];
+      
+      for (const template of dailyTemplates) {
+        // Chercher une tâche existante pour ce template qui soit disponible aujourd'hui
+        const existingTask = existingTasks.find(task => 
+          task.template_id === template.id && 
+          task.status === 'due' &&
+          new Date(task.next_due_at) >= today &&
+          new Date(task.next_due_at) < tomorrow
+        );
+        
+        // Si aucune tâche n'existe pour aujourd'hui, en créer une
+        if (!existingTask) {
+          const newTaskId = `${userId}_template_${template.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          
+          tasksToCreate.push({
+            id: newTaskId,
+            user_id: userId,
+            template_id: template.id,
+            title: template.title,
+            room: template.room,
+            frequency: template.frequency,
+            status: 'due',
+            points: template.points,
+            duration_min: template.duration_min,
+            next_due_at: new Date().toISOString() // Disponible maintenant
+          });
+        }
+      }
+      
+      // Créer toutes les tâches manquantes en une seule fois
+      if (tasksToCreate.length > 0) {
+        const { data, error } = await client
+          .from('user_tasks')
+          .insert(tasksToCreate)
+          .select();
+          
+        if (error) throw error;
+        console.log(`✅ Generated ${tasksToCreate.length} missing daily tasks for today:`, data);
+      }
+      
+      return tasksToCreate;
+    } catch (error) {
+      console.error('❌ Error generating missing daily tasks:', error);
+      throw error;
+    }
+  }
+
   // Mettre à jour le statut d'une tâche
   static async updateTaskStatus(taskId: string, status: 'due' | 'done' | 'snoozed' | 'deleted') {
     try {
       const client = checkSupabaseConnection();
+      
+      // Si on marque une tâche comme terminée, d'abord récupérer les infos de la tâche
+      let taskToUpdate = null;
+      if (status === 'done') {
+        const { data: taskData, error: fetchError } = await client
+          .from('user_tasks')
+          .select('*, task_templates(*)')
+          .eq('id', taskId)
+          .single();
+          
+        if (fetchError) throw fetchError;
+        taskToUpdate = taskData;
+      }
+      
       const updates: any = { status };
       
       if (status === 'done') {
@@ -266,10 +355,56 @@ export class SupabaseService {
         .select();
 
       if (error) throw error;
+      
+      // Si c'est une tâche quotidienne qui vient d'être terminée, créer une nouvelle instance pour demain
+      if (status === 'done' && taskToUpdate && taskToUpdate.frequency === 'daily') {
+        await this.regenerateDailyTask(taskToUpdate);
+      }
+      
       console.log('✅ Task status updated:', data);
       return data;
     } catch (error) {
       console.error('❌ Error updating task status:', error);
+      throw error;
+    }
+  }
+
+  // Régénérer une tâche quotidienne pour le jour suivant
+  static async regenerateDailyTask(completedTask: any) {
+    try {
+      const client = checkSupabaseConnection();
+      
+      // Créer un nouvel ID pour la tâche de demain
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(6, 0, 0, 0); // Programmée pour 6h du matin
+      
+      const newTaskId = `${completedTask.user_id}_template_${completedTask.template_id}_${Date.now()}`;
+      
+      const newTask = {
+        id: newTaskId,
+        user_id: completedTask.user_id,
+        template_id: completedTask.template_id,
+        title: completedTask.title,
+        room: completedTask.room,
+        frequency: completedTask.frequency,
+        status: 'due',
+        points: completedTask.points,
+        duration_min: completedTask.duration_min,
+        next_due_at: tomorrow.toISOString()
+      };
+
+      const { data, error } = await client
+        .from('user_tasks')
+        .insert([newTask])
+        .select()
+        .single();
+
+      if (error) throw error;
+      console.log('✅ Daily task regenerated for tomorrow:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error regenerating daily task:', error);
       throw error;
     }
   }

@@ -118,10 +118,6 @@ export default function Home() {
   const todayTasks = tasks
     .filter(task => {
       console.log('Home: Filtering task:', task);
-      if (task.status !== 'due') {
-        console.log('Home: Task status not due:', task.status);
-        return false;
-      }
       
       const template = templates.find(t => t.id === task.templateId);
       if (!template && !task.isCustom) {
@@ -129,16 +125,22 @@ export default function Home() {
         return false;
       }
       
-      // Include custom tasks (always available)
-      if (task.isCustom) {
+      // Include custom tasks that are due
+      if (task.isCustom && task.status === 'due') {
         console.log('Home: Including custom task:', task.customTitle);
         return true;
       }
       
-      // Include daily tasks (always available for today)
-      if (template && template.frequency === 'daily') {
+      // Include daily tasks that are due (should appear every day)
+      if (template && template.frequency === 'daily' && task.status === 'due') {
         console.log('Home: Including daily task:', template.title);
         return true;
+      }
+      
+      // For non-daily tasks, only include if status is due
+      if (task.status !== 'due') {
+        console.log('Home: Task status not due:', task.status);
+        return false;
       }
       
       // For other frequencies, check if due today or can be executed early
